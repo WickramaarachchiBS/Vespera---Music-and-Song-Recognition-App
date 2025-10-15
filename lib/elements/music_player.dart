@@ -64,19 +64,30 @@ class _PlayerScreenState extends State<PlayerScreen> {
               ),
 
               // Song Title and Artist
-              const Column(
-                children: [
-                  Text(
-                    'New Jeans',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'New Jeans',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text('NewJeans', style: TextStyle(color: Colors.grey, fontSize: 18)),
+                      ],
                     ),
-                  ),
-                  SizedBox(height: 8),
-                  Text('NewJeans', style: TextStyle(color: Colors.grey, fontSize: 18)),
-                ],
+                    Column(
+                      children: [Icon(Icons.add_circle_outline, color: Colors.white, size: 30)],
+                    ),
+                  ],
+                ),
               ),
 
               // Seek Bar
