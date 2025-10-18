@@ -31,14 +31,6 @@ class _CommonScreenState extends State<CommonScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Vésper', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
-        centerTitle: true,
-        leading: const Padding(
-          padding: EdgeInsets.all(8.0),
-          child: CircleAvatar(backgroundImage: AssetImage('assets/profilePic.jpg')),
-        ),
-      ),
       body: Column(
         children: [
           Expanded(child: Center(child: _widgetOptions.elementAt(_selectedIndex))),
