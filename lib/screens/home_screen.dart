@@ -92,7 +92,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            // TEXT FOR RECOMMENDED ITEMS
+            SizedBox(height: 10.0),
+            // TEXT FOR RECENT PLAYLIST ITEMS
             Container(
               alignment: Alignment.bottomLeft,
               margin: EdgeInsets.only(left: 18.0),

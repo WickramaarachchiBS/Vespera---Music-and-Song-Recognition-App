@@ -24,7 +24,7 @@ class HomeScreenLibItem extends StatelessWidget {
             child: Image.asset('assets/newJeans.jpg'),
           ),
           SizedBox(width: 10.0),
-          Text('Playlist Name', style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
+          Text('Playlist Name', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
         ],
       ),
     );
