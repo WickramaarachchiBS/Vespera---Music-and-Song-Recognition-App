@@ -11,6 +11,24 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  //sample data - replace with real data from API/database
+  final List<Map<String, String>> recommendations = [
+    {'title': 'Chill Evening', 'image': 'assets/her.jpg'},
+    {'title': 'Workout Mix', 'image': 'assets/newJeans.jpg'},
+    {'title': 'Study Focus', 'image': 'assets/daddyIssues.jpg'},
+    {'title': 'Party Hits', 'image': 'assets/dandelion.jpg'},
+    {'title': 'Morning Boost', 'image': 'assets/her.jpg'},
+    {'title': 'Acoustic Vibes', 'image': 'assets/newJeans.jpg'},
+  ];
+
+  final List<Map<String, String>> recentPlaylists = [
+    {'title': 'My Favorites', 'image': 'assets/newJeans.jpg'},
+    {'title': 'Daily Mix', 'image': 'assets/her.jpg'},
+    {'title': 'Road Trip', 'image': 'assets/dandelion.jpg'},
+    {'title': 'Relaxing Tunes', 'image': 'assets/daddyIssues.jpg'},
+    {'title': 'Top Hits', 'image': 'assets/newJeans.jpg'},
+  ];
+
   @override
   Widget build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
@@ -21,19 +39,25 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.backgroundDark,
         title: const Text(
-          'Home',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white),
+          'Hello Banuka',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: AppColors.textMuted),
         ),
-        leading: const Padding(
-          padding: EdgeInsets.all(8.0),
-          child: CircleAvatar(backgroundImage: AssetImage('assets/profilePic.jpg')),
+        leading: Container(
+          margin: EdgeInsets.only(left: 15.0),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 3.0),
+            child: CircleAvatar(backgroundImage: AssetImage('assets/profilePic.jpg')),
+          ),
         ),
         actions: [
-          IconButton(
-            //USE A CUSTOM ICON FOR THIS
-            icon: const Icon(Icons.settings, size: 30, color: AppColors.textPrimary),
-            // Handle settings button press
-            onPressed: () {},
+          Container(
+            margin: EdgeInsets.only(right: 8.0),
+            child: IconButton(
+              //USE A CUSTOM ICON FOR THIS
+              icon: const Icon(Icons.settings, size: 30, color: AppColors.textPrimary),
+              // Handle settings button press
+              onPressed: () {},
+            ),
           ),
         ],
       ),
@@ -87,9 +111,13 @@ class _HomeScreenState extends State<HomeScreen> {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: [
-                  Row(children: [HomeScreenRecItem(), HomeScreenRecItem(), HomeScreenRecItem()]),
-                ],
+                children:
+                    recommendations
+                        .map(
+                          (item) =>
+                              HomeScreenRecItem(title: item['title']!, imageAsset: item['image']!),
+                        )
+                        .toList(),
               ),
             ),
             SizedBox(height: 10.0),
@@ -106,13 +134,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            // RECOMMENDATION ITEMS
+            // RECENT PLAYLIST ITEMS
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: [
-                  Row(children: [HomeScreenRecItem(), HomeScreenRecItem(), HomeScreenRecItem()]),
-                ],
+                children:
+                    recentPlaylists
+                        .map(
+                          (item) =>
+                              HomeScreenRecItem(title: item['title']!, imageAsset: item['image']!),
+                        )
+                        .toList(),
               ),
             ),
           ],
