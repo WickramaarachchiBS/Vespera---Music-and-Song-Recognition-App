@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vespera/colors.dart';
 import 'package:vespera/components/home_screen_lib_item.dart';
 import 'package:vespera/components/home_screen_rec_item.dart';
 
@@ -16,8 +17,13 @@ class _HomeScreenState extends State<HomeScreen> {
     double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
+      backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
-        title: const Text('Home', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+        backgroundColor: AppColors.backgroundDark,
+        title: const Text(
+          'Home',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white),
+        ),
         leading: const Padding(
           padding: EdgeInsets.all(8.0),
           child: CircleAvatar(backgroundImage: AssetImage('assets/profilePic.jpg')),
@@ -25,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             //USE A CUSTOM ICON FOR THIS
-            icon: const Icon(Icons.settings, size: 30),
+            icon: const Icon(Icons.settings, size: 30, color: AppColors.textPrimary),
             // Handle settings button press
             onPressed: () {},
           ),
@@ -70,7 +76,11 @@ class _HomeScreenState extends State<HomeScreen> {
               margin: EdgeInsets.only(left: 18.0),
               child: Text(
                 'More of what you like',
-                style: TextStyle(fontSize: 21.0, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 21.0,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
             // RECOMMENDATION ITEMS
@@ -88,7 +98,11 @@ class _HomeScreenState extends State<HomeScreen> {
               margin: EdgeInsets.only(left: 18.0),
               child: Text(
                 'Recent Playlists',
-                style: TextStyle(fontSize: 21.0, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 21.0,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
             // RECOMMENDATION ITEMS

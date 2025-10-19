@@ -5,11 +5,16 @@ class HomeScreenRecItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 150.0,
-      width: 150.0,
-      margin: EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
-      decoration: BoxDecoration(color: Colors.greenAccent, borderRadius: BorderRadius.circular(10)),
+    return Column(
+      children: [
+        Container(
+          height: 150.0,
+          width: 150.0,
+          margin: EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+          decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(10)),
+        ),
+        Text('Chill Evening', style: TextStyle(fontSize: 12)),
+      ],
     );
   }
 }
