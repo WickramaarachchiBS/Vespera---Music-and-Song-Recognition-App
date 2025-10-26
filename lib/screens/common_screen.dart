@@ -19,13 +19,17 @@ class _CommonScreenState extends State<CommonScreen> {
     HomeScreen(),
     SearchScreen(),
     LibraryScreen(),
-    WhisperScreen(),
   ];
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    if (index == 3) {
+      // Open Whisper as separate screen
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const WhisperScreen()));
+    } else {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
   }
 
   @override
