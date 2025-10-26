@@ -66,6 +66,25 @@ class _LibraryScreenState extends State<LibraryScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: Colors.green, width: 2.0)),
+                  ),
+                  margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  child: Text(
+                    'Playlists',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
