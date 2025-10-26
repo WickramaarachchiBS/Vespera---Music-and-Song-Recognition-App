@@ -16,6 +16,8 @@ class _SearchScreenState extends State<SearchScreen> {
     {'title': 'Blinding Lights', 'artist': 'The Weeknd'},
     {'title': 'Shape of You', 'artist': 'Ed Sheeran'},
     {'title': 'Levitating', 'artist': 'Dua Lipa'},
+    {'title': 'Save Your Tears', 'artist': 'The Weeknd'},
+    {'title': 'Peaches', 'artist': 'Justin Bieber'},
   ];
 
   @override
