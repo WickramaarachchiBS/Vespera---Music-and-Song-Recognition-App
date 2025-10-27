@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
 import 'package:vespera/components/home_screen_lib_item.dart';
 import 'package:vespera/components/home_screen_rec_item.dart';
+import 'package:vespera/services/auth_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,6 +13,28 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final AuthService _authService = AuthService();
+  String username = 'User'; //Default
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    User? user = _authService.currentUser;
+    if (user != null) {
+      // Get user data from Firestore to get the name
+      Map<String, dynamic>? userData = await _authService.getUserData(user.uid);
+      if (userData != null) {
+        setState(() {
+          username = userData['name'] ?? 'User';
+        });
+      }
+    }
+  }
+
   //sample data - replace with real data from API/database
   final List<Map<String, String>> recommendations = [
     {'title': 'Chill Evening', 'image': 'assets/her.jpg'},
@@ -38,9 +62,13 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
         backgroundColor: AppColors.backgroundDark,
-        title: const Text(
-          'Hello Banuka',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: AppColors.textMuted),
+        title: Text(
+          'Hello $username',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            color: AppColors.textMuted,
+          ),
         ),
         leading: Container(
           margin: EdgeInsets.only(left: 15.0),
