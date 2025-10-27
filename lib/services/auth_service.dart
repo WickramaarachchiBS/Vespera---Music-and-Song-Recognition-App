@@ -10,7 +10,7 @@ class AuthService {
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   //SIGN UP WITH EMAIL AND PASSWORD ----------------------------------------------------------------
-  Future<UserCredential?> signUpWithEmail({required String email, required String password}) async {
+  Future<UserCredential?> signUp({required String email, required String password}) async {
     try {
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -26,12 +26,13 @@ class AuthService {
         throw 'An error occurred: ${e.message}';
       }
     } catch (e) {
-      throw 'An unexpected error occurred.';
+      print('SignUp error: $e');
+      throw 'An unexpected error occurred: $e';
     }
   }
 
   // SIGN IN WITH EMAIL AND PASSWORD ---------------------------------------------------------------
-  Future<UserCredential?> signInWithEmail({required String email, required String password}) async {
+  Future<UserCredential?> signIn({required String email, required String password}) async {
     try {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email,

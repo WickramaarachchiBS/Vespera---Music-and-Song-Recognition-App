@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
 import 'package:vespera/screens/signin_screen.dart';
+import 'package:vespera/services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -10,16 +11,62 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  final AuthService _authService = AuthService();
+
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  // Handle onPressed for sign up button
+  Future<void> _onSignUpPressed() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
+
+    try {
+      await _authService.signUp(email: email, password: password);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Welcome to Vesper!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        // Navigate to home screen
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -162,11 +209,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                 // SIGN UP BUTTON
                 ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      // Handle signup
-                    }
-                  },
+                  onPressed: _onSignUpPressed,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.authButtonPrimary,
                     foregroundColor: Colors.black,

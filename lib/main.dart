@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:vespera/screens/common_screen.dart';
 import 'package:vespera/screens/home_screen.dart';
 import 'package:vespera/screens/signin_screen.dart';
 import 'package:vespera/screens/signup_screen.dart';
@@ -26,10 +27,7 @@ class MyApp extends StatelessWidget {
         '/welcome': (context) => const WelcomeScreen(),
         '/signUp': (context) => const SignUpScreen(),
         '/signIn': (context) => const SignInScreen(),
-        '/home': (context) => const HomeScreen(),
-        '/search': (context) => const HomeScreen(),
-        'library': (context) => const HomeScreen(),
-        '/welcome': (context) => const WelcomeScreen(),
+        '/home': (context) => const CommonScreen(),
       },
     );
   }
