@@ -27,6 +27,10 @@ class UserProvider extends ChangeNotifier {
         _username = userData['name'] ?? 'User';
         _profilePicture = userData['profilePicture'] ?? '';
         notifyListeners();
+        print('User data loaded: $_username');
+        print('Profile picture URL: $_profilePicture');
+        print ('User ID: ${user.uid}');
+        print ('User Email: ${user.email}');
       }
     } catch (e) {
       print('Error loading user data: $e');

@@ -1,8 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:vespera/colors.dart';
 import 'package:vespera/components/home_screen_lib_item.dart';
 import 'package:vespera/components/home_screen_rec_item.dart';
+import 'package:vespera/providers/user_provider.dart';
 import 'package:vespera/services/auth_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -13,26 +15,16 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final AuthService _authService = AuthService();
-  String username = 'User'; //Default
-
   @override
   void initState() {
     super.initState();
-    _loadUserData();
-  }
-
-  Future<void> _loadUserData() async {
-    User? user = _authService.currentUser;
-    if (user != null) {
-      // Get user data from Firestore to get the name
-      Map<String, dynamic>? userData = await _authService.getUserData(user.uid);
-      if (userData != null) {
-        setState(() {
-          username = userData['name'] ?? 'User';
-        });
+    // Load user data only if not already loaded
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      if (userProvider.username == 'User') {
+        userProvider.loadUserData();
       }
-    }
+    });
   }
 
   //sample data - replace with real data from API/database
@@ -63,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.backgroundDark,
         title: Text(
-          'Hello $username',
+          'Hello ${Provider.of<UserProvider>(context).username}',
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 20,
@@ -85,8 +77,9 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: const Icon(Icons.settings, size: 30, color: AppColors.textPrimary),
               // Handle settings button press
               onPressed: () {
-                // Navigate to welcome screen
-                Navigator.pushNamed(context, '/welcome');
+                // Logout
+                AuthService().signOut();
+                
               },
             ),
           ),
