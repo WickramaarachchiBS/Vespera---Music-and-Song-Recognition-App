@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Get current user
   User? get currentUser => _auth.currentUser;
@@ -10,12 +12,29 @@ class AuthService {
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   //SIGN UP WITH EMAIL AND PASSWORD ----------------------------------------------------------------
-  Future<UserCredential?> signUp({required String email, required String password}) async {
+  Future<UserCredential?> signUp({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
     try {
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+
+      // Update user profile with display name
+      await userCredential.user?.updateDisplayName(name);
+
+      // Store user details in Firestore
+      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+        'uid': userCredential.user!.uid,
+        'name': name,
+        'email': email,
+        'createdAt': FieldValue.serverTimestamp(),
+        'profilePicture': '', // Empty by default, can be updated later
+      });
+
       return userCredential;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
@@ -55,5 +74,47 @@ class AuthService {
   // Sign out
   Future<void> signOut() async {
     await _auth.signOut();
+  }
+
+  // EXTRA FOR LATER USE ----------------------------------------------------------------
+  // Get user data from Firestore
+  Future<Map<String, dynamic>?> getUserData(String uid) async {
+    try {
+      DocumentSnapshot doc = await _firestore.collection('users').doc(uid).get();
+      if (doc.exists) {
+        return doc.data() as Map<String, dynamic>?;
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching user data: $e');
+      return null;
+    }
+  }
+
+  // Update user profile
+  Future<void> updateUserProfile({
+    required String uid,
+    String? name,
+    String? profilePicture,
+  }) async {
+    try {
+      Map<String, dynamic> updates = {};
+
+      if (name != null) {
+        updates['name'] = name;
+        await _auth.currentUser?.updateDisplayName(name);
+      }
+
+      if (profilePicture != null) {
+        updates['profilePicture'] = profilePicture;
+      }
+
+      if (updates.isNotEmpty) {
+        await _firestore.collection('users').doc(uid).update(updates);
+      }
+    } catch (e) {
+      print('Error updating user profile: $e');
+      throw 'Failed to update profile.';
+    }
   }
 }
