@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
+import 'package:vespera/components/create_playlist_modal.dart';
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
@@ -56,7 +57,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   //USE A CUSTOM ICON FOR THIS
                   icon: const Icon(Icons.add, size: 35, color: AppColors.textPrimary),
                   // Handle settings button press
-                  onPressed: () {},
+                  onPressed: () {
+                    CreatePlaylistModal.show(context, (String playlistName) {
+                      setState(() {
+                        playlists.add({
+                          'title': playlistName,
+                          'artist': 'Unknown Artist',
+                          'imagePath': 'assets/dandelion.jpg', // Default image
+                        });
+                      });
+                    });
+                  },
                 ),
               ),
             ],

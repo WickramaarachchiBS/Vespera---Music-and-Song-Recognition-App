@@ -56,7 +56,10 @@ class _HomeScreenState extends State<HomeScreen> {
               //USE A CUSTOM ICON FOR THIS
               icon: const Icon(Icons.settings, size: 30, color: AppColors.textPrimary),
               // Handle settings button press
-              onPressed: () {},
+              onPressed: () {
+                // Navigate to welcome screen
+                Navigator.pushNamed(context, '/welcome');
+              },
             ),
           ),
         ],
