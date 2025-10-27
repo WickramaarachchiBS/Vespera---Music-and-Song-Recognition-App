@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
-import 'package:vespera/screens/signin_screen.dart';
+import 'package:vespera/screens/signup_screen.dart';
 
-class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+class SignInScreen extends StatefulWidget {
+  const SignInScreen({super.key});
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  State<SignInScreen> createState() => _SignInScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class _SignInScreenState extends State<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -44,11 +44,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 // TITLE TEXT
                 Text(
-                  'Sign up to',
-                  style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  'start listening',
+                  'Log in to Vesper',
                   style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 20),
@@ -150,21 +146,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter a password';
-                    }
-                    if (value.length < 8) {
-                      return 'Password must be at least 8 characters';
+                      return 'Please enter your password';
                     }
                     return null;
                   },
                 ),
                 SizedBox(height: 40),
 
-                // SIGN UP BUTTON
+                // LOG IN BUTTON
                 ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
-                      // Handle signup
+                      // Handle login
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -174,16 +167,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                   ),
                   child: Text(
-                    'Sign up',
+                    'Sign in',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
 
-                //SIGN UP WITH GOOGLE BUTTON
+                // LOG IN WITH GOOGLE BUTTON
                 SizedBox(height: 15),
                 OutlinedButton.icon(
                   onPressed: () {
-                    // Google sign up
+                    // Google sign in
                   },
                   icon: Image.asset('assets/google_logo.png', height: 24, width: 24),
                   label: Text('Continue with Google'),
@@ -195,22 +188,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
 
-                // ALREADY HAVE ACCOUNT BUTTON
+                // DON'T HAVE ACCOUNT BUTTON
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Already have an account? ', style: TextStyle(color: Colors.grey)),
+                    Text("Don't have an account? ", style: TextStyle(color: Colors.grey)),
                     TextButton(
                       onPressed: () {
-                        // Navigate to login
+                        // Navigate to signup
                         Navigator.pop(context);
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => SignInScreen()),
+                          MaterialPageRoute(builder: (context) => SignUpScreen()),
                         );
                       },
                       child: Text(
-                        'Log in',
+                        'Sign up',
                         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                       ),
                     ),

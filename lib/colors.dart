@@ -25,4 +25,8 @@ class AppColors {
   static const Color buttonPrimary = Color(0xFF2563EB); // Blue button
   static const Color buttonHover = Color(0xFF1D4ED8); // Darker blue on hover
   static const Color divider = Color(0xFF374151); // Divider color
+
+  // Button Colors SignIn SingUp
+  static const Color authBackground = Color(0xFF010B1C); // Blue for Facebook
+  static const Color authButtonPrimary = Color(0xFF1DA2B9); // White for Google
 }

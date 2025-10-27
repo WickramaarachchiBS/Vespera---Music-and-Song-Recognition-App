@@ -1,9 +1,14 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:vespera/screens/common_screen.dart';
 import 'package:vespera/screens/home_screen.dart';
+import 'package:vespera/screens/signin_screen.dart';
+import 'package:vespera/screens/signup_screen.dart';
 import 'package:vespera/screens/welcome_screen.dart';
+import 'package:vespera/services/auth_wrapper.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
@@ -16,9 +21,11 @@ class MyApp extends StatelessWidget {
       title: 'Vespera',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple)),
-      initialRoute: '/',
+      home: const AuthWrapper(),
       routes: {
-        '/': (context) => const CommonScreen(),
+        '/welcome': (context) => const WelcomeScreen(),
+        '/signUp': (context) => const SignUpScreen(),
+        '/signIn': (context) => const SignInScreen(),
         '/home': (context) => const HomeScreen(),
         '/search': (context) => const HomeScreen(),
         'library': (context) => const HomeScreen(),

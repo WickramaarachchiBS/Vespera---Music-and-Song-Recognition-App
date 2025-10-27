@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vespera/screens/signin_screen.dart';
 import 'package:vespera/screens/signup_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -12,7 +13,7 @@ class WelcomeScreen extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF0F2778), Color(0xFF191414)],
+            colors: [Color(0xFF020D33), Color(0xFF191414)],
           ),
         ),
         child: SafeArea(
@@ -23,7 +24,14 @@ class WelcomeScreen extends StatelessWidget {
               children: [
                 SizedBox(height: 200),
                 // LOGO & TEXT
-                Icon(Icons.music_note, size: 80, color: Colors.white),
+                ClipOval(
+                  child: Image.asset(
+                    'assets/app_icon.jpg',
+                    height: 100,
+                    width: 100,
+                    fit: BoxFit.fill,
+                  ),
+                ),
                 Text(
                   'Millions of songs.\nFree on Vesper.',
                   textAlign: TextAlign.center,
@@ -38,7 +46,7 @@ class WelcomeScreen extends StatelessWidget {
                     // Navigate to sign up
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => SignupScreen()),
+                      MaterialPageRoute(builder: (context) => SignUpScreen()),
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -61,7 +69,10 @@ class WelcomeScreen extends StatelessWidget {
                 // LOG IN BUTTON
                 OutlinedButton.icon(
                   onPressed: () {
-                    // Google sign in
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SignInScreen()),
+                    );
                   },
                   label: Text('Log In'),
                   style: OutlinedButton.styleFrom(
