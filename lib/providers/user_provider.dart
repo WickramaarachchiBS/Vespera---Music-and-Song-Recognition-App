@@ -7,10 +7,12 @@ class UserProvider extends ChangeNotifier {
   
   String _username = 'User';
   String _profilePicture = '';
+  String _email = '';
   bool _isLoading = false;
 
   String get username => _username;
   String get profilePicture => _profilePicture;
+  String get email => _email;
   bool get isLoading => _isLoading;
 
   // Load user data once
@@ -26,11 +28,10 @@ class UserProvider extends ChangeNotifier {
       if (userData != null) {
         _username = userData['name'] ?? 'User';
         _profilePicture = userData['profilePicture'] ?? '';
+        _email = userData['email'] ?? '';
         notifyListeners();
         print('User data loaded: $_username');
-        print('Profile picture URL: $_profilePicture');
-        print ('User ID: ${user.uid}');
-        print ('User Email: ${user.email}');
+        print ('Email: $_email');
       }
     } catch (e) {
       print('Error loading user data: $e');
@@ -44,6 +45,7 @@ class UserProvider extends ChangeNotifier {
   void clearUserData() {
     _username = 'User';
     _profilePicture = '';
+    _email = '';
     notifyListeners();
   }
 }

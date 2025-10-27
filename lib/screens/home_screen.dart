@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vespera/colors.dart';
@@ -25,6 +24,22 @@ class _HomeScreenState extends State<HomeScreen> {
         userProvider.loadUserData();
       }
     });
+  }
+
+  Future<void> _handleSignOut() async {
+    // Clear user provider data
+    Provider.of<UserProvider>(context, listen: false).clearUserData();
+    
+    // Sign out from AuthService
+    await AuthService().signOut();
+    
+    // Navigate to welcome screen and remove all previous routes
+    if (context.mounted) {
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        '/welcome',
+        (route) => false,
+      );
+    }
   }
 
   //sample data - replace with real data from API/database
@@ -72,15 +87,29 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           Container(
             margin: EdgeInsets.only(right: 8.0),
-            child: IconButton(
-              //USE A CUSTOM ICON FOR THIS
+            child: PopupMenuButton<String>(
               icon: const Icon(Icons.settings, size: 30, color: AppColors.textPrimary),
-              // Handle settings button press
-              onPressed: () {
-                // Logout
-                AuthService().signOut();
-                
+              color: AppColors.backgroundDark,
+              onSelected: (String value) {
+                if (value == 'signout') {
+                  _handleSignOut();
+                }
               },
+              itemBuilder: (BuildContext context) => [
+                const PopupMenuItem<String>(
+                  value: 'signout',
+                  child: Row(
+                    children: [
+                      Icon(Icons.logout, color: AppColors.textPrimary),
+                      SizedBox(width: 10),
+                      Text(
+                        'Sign Out',
+                        style: TextStyle(color: AppColors.textPrimary),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
