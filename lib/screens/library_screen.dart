@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
 import 'package:vespera/components/create_playlist_modal.dart';
+import 'package:vespera/screens/playlist_detail_screen.dart';
 import 'package:vespera/services/playlist_service.dart';
 
 class LibraryScreen extends StatefulWidget {
@@ -36,61 +37,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
     }
   }
 
-  // Delete playlist
-  Future<void> _deletePlaylist(String playlistId, String playlistName) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            backgroundColor: AppColors.backgroundDark,
-            title: const Text('Delete Playlist', style: TextStyle(color: AppColors.textPrimary)),
-            content: Text(
-              'Are you sure you want to delete "$playlistName"?',
-              style: const TextStyle(color: AppColors.textMuted),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Delete', style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
-    );
-
-    if (confirm == true) {
-      try {
-        await _playlistService.deletePlaylist(playlistId);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Playlist deleted'), backgroundColor: Colors.green),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error deleting playlist: $e'), backgroundColor: Colors.red),
-          );
-        }
-      }
-    }
-  }
-
-  // Sample list of songs/playlists
-  // final List<Map<String, String>> playlists = [
-  //   {'title': 'My Playlist 1', 'artist': 'Artist Name', 'imagePath': 'assets/dandelion.jpg'},
-  //   {'title': 'Top Hits', 'artist': 'Various Artists', 'imagePath': 'assets/daddyIssues.jpg'},
-  //   {'title': 'Chill Vibes', 'artist': 'Various Artists', 'imagePath': 'assets/her.jpg'},
-  //   {'title': 'Workout Mix', 'artist': 'DJ Mix', 'imagePath': 'assets/newJeans.jpg'},
-  //   {'title': 'Road Trip', 'artist': 'Travel Songs', 'imagePath': 'assets/dandelion.jpg'},
-  //   {'title': 'Study Session', 'artist': 'Lo-Fi Beats', 'imagePath': 'assets/daddyIssues.jpg'},
-  //   {'title': 'Party Time', 'artist': 'Dance Hits', 'imagePath': 'assets/her.jpg'},
-  //   {'title': 'Relaxing Tunes', 'artist': 'Calm Music', 'imagePath': 'assets/newJeans.jpg'},
-  // ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -116,7 +62,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 child: IconButton(
                   //USE A CUSTOM ICON FOR THIS
                   icon: const Icon(Icons.search_rounded, size: 30, color: AppColors.textPrimary),
-                  // Handle settings button press
+                  // Handle search button press
                   onPressed: () {},
                 ),
               ),
@@ -125,7 +71,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 child: IconButton(
                   //USE A CUSTOM ICON FOR THIS
                   icon: const Icon(Icons.add, size: 35, color: AppColors.textPrimary),
-                  // Handle settings button press
+                  // Handle add button press
                   onPressed: () {
                     CreatePlaylistModal.show(context, _createPlaylist);
                   },
@@ -157,7 +103,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 ),
               ],
             ),
-            //
+            
+            // Display playlists from firebase
             StreamBuilder<QuerySnapshot>(
               stream: _playlistService.getUserPlaylists(),
               builder: (context, snapshot) {
@@ -258,42 +205,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           ),
                         ),
                         subtitle: Text('Playlist', style: TextStyle(color: AppColors.textMuted)),
-                        trailing: PopupMenuButton<String>(
-                          icon: const Icon(Icons.more_vert, color: AppColors.textMuted),
-                          color: AppColors.backgroundDark,
-                          onSelected: (value) {
-                            if (value == 'delete') {
-                              _deletePlaylist(playlistId, name);
-                            }
-                          },
-                          itemBuilder:
-                              (context) => [
-                                const PopupMenuItem(
-                                  value: 'delete',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.delete, color: Colors.red),
-                                      SizedBox(width: 10),
-                                      Text(
-                                        'Delete',
-                                        style: TextStyle(color: AppColors.textPrimary),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                        ),
                         onTap: () {
-                          // TODO: Navigate to playlist detail screen
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //     builder: (context) => PlaylistDetailScreen(
-                          //       playlistId: playlistId,
-                          //       playlistName: name,
-                          //     ),
-                          //   ),
-                          // );
+                          // Navigate to playlist detail screen
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PlaylistDetailScreen(
+                                playlistId: playlistId,
+                                playlistName: name,
+                              ),
+                            ),
+                          );
                         },
                       ),
                     );
