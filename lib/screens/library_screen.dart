@@ -206,9 +206,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         ),
                         subtitle: Text('Playlist', style: TextStyle(color: AppColors.textMuted)),
                         onTap: () {
-                          // Navigate to playlist detail screen
-                          // When navigating to playlist detail, use:
-                          Navigator.of(context).push(
+                          Navigator.of(context, rootNavigator: false).push(
                             MaterialPageRoute(
                               builder:
                                   (context) => PlaylistDetailScreen(
