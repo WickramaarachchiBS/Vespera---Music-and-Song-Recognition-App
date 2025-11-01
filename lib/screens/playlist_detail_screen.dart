@@ -98,7 +98,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          // Add sample song button (remove this in production)
+          // Add sample song button
           IconButton(
             icon: const Icon(Icons.add, color: AppColors.textPrimary),
             onPressed: _addSampleSong,
@@ -189,7 +189,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                 child: ListTile(
                   leading: ClipRRect(
                     borderRadius: BorderRadius.circular(4.0),
-                    child: Image.asset(
+                    child: Image.network(
                       imageURL,
                       width: 50,
                       height: 50,

@@ -103,7 +103,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 ),
               ],
             ),
-            
+
             // Display playlists from firebase
             StreamBuilder<QuerySnapshot>(
               stream: _playlistService.getUserPlaylists(),
@@ -207,13 +207,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         subtitle: Text('Playlist', style: TextStyle(color: AppColors.textMuted)),
                         onTap: () {
                           // Navigate to playlist detail screen
-                          Navigator.push(
-                            context,
+                          // When navigating to playlist detail, use:
+                          Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => PlaylistDetailScreen(
-                                playlistId: playlistId,
-                                playlistName: name,
-                              ),
+                              builder:
+                                  (context) => PlaylistDetailScreen(
+                                    playlistId: playlistId,
+                                    playlistName: name,
+                                  ),
                             ),
                           );
                         },
