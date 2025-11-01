@@ -43,6 +43,16 @@ class _SearchScreenState extends State<SearchScreen> {
             child: CircleAvatar(backgroundImage: AssetImage('assets/profilePic.jpg')),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add, color: AppColors.textPrimary, size: 25),
+            onPressed: () {
+              // Add songs to firebase function (TEMP)
+              print('Add song button pressed');
+
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
