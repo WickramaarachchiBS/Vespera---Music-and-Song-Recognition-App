@@ -21,18 +21,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
       await _playlistService.createPlaylist(playlistName, 'assets/dandelion.jpg');
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Playlist "$playlistName" created!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Playlist "$playlistName" created!'), backgroundColor: Colors.green));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error creating playlist: $e'), backgroundColor: Colors.red),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error creating playlist: $e'), backgroundColor: Colors.red));
       }
     }
   }
@@ -88,17 +85,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Container(
-                  decoration: BoxDecoration(
-                    border: Border(bottom: BorderSide(color: Colors.green, width: 2.0)),
-                  ),
+                  decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.green, width: 2.0))),
                   margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                   child: Text(
                     'Playlists',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   ),
                 ),
               ],
@@ -137,19 +128,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.library_music_outlined,
-                            size: 64,
-                            color: AppColors.textMuted.withOpacity(0.5),
-                          ),
+                          Icon(Icons.library_music_outlined, size: 64, color: AppColors.textMuted.withOpacity(0.5)),
                           const SizedBox(height: 16),
                           Text(
                             'No playlists yet',
-                            style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 8),
                           Text(
@@ -173,7 +156,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     String playlistId = playlist.id;
                     String name = playlistData['name'] ?? 'Untitled';
                     String imageURL = playlistData['imageURL'] ?? '';
-                    String audioURL = playlistData['audioURL'] ?? '';
 
                     return Card(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
@@ -198,13 +180,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                             },
                           ),
                         ),
-                        title: Text(
-                          name,
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        title: Text(name, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
                         subtitle: Text('Playlist', style: TextStyle(color: AppColors.textMuted)),
                         onTap: () {
                           Navigator.of(context, rootNavigator: false).push(
@@ -213,11 +189,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                   (context) => PlaylistDetailScreen(
                                     playlistId: playlistId,
                                     playlistName: name,
-                                    imageURL: imageURL,
-                                    audioURL: audioURL,
                                   ),
                             ),
                           );
+
                         },
                       ),
                     );

@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:vespera/models/song.dart';
+import 'package:vespera/models/playlist.dart';
 
 class PlaylistService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -30,6 +32,17 @@ class PlaylistService {
         .snapshots();
   }
 
+  // Get playlists for the current user (typed)
+  Stream<List<Playlist>> getUserPlaylistsTyped() {
+    if (_userId == null) throw Exception('User not authenticated');
+
+    return _firestore
+        .collection('playlists')
+        .where('userId', isEqualTo: _userId)
+        .snapshots()
+        .map((snap) => snap.docs.map((d) => Playlist.fromDoc(d)).toList());
+  }
+
   // Delete a playlist
   Future<void> deletePlaylist(String playlistId) async {
     if (_userId == null) throw Exception('User not authenticated');
@@ -42,6 +55,26 @@ class PlaylistService {
     if (_userId == null) throw Exception('User not authenticated');
 
     await _firestore.collection('playlists').doc(playlistId).collection('songs').add(songData);
+  }
+
+  // Get songs in a playlist (typed)
+  Stream<List<Song>> getPlaylistSongs(String playlistId) {
+    return _firestore
+        .collection('playlists')
+        .doc(playlistId)
+        .collection('songs')
+        .snapshots()
+        .map((snap) => snap.docs.map((d) => Song.fromDoc(d)).toList());
+  }
+
+  // Add a song using the model
+  Future<void> addSongToPlaylistModel(String playlistId, Song song) async {
+    if (_userId == null) throw Exception('User not authenticated');
+    await _firestore
+        .collection('playlists')
+        .doc(playlistId)
+        .collection('songs')
+        .add(song.toMap());
   }
 
   // Remove a song from a playlist

@@ -1,24 +1,14 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
-import 'package:vespera/helpers/slide_up_music_player.dart';
-import 'package:vespera/services/playlist_service.dart';
+import 'package:vespera/models/song.dart';
 import 'package:vespera/services/audio_service.dart';
-import '../elements/music_player.dart';
+import 'package:vespera/services/playlist_service.dart';
 
 class PlaylistDetailScreen extends StatefulWidget {
   final String playlistId;
   final String playlistName;
-  final String audioURL;
-  final String imageURL;
 
-  const PlaylistDetailScreen({
-    super.key,
-    required this.playlistId,
-    required this.playlistName,
-    required this.audioURL,
-    required this.imageURL,
-  });
+  const PlaylistDetailScreen({super.key, required this.playlistId, required this.playlistName});
 
   @override
   State<PlaylistDetailScreen> createState() => _PlaylistDetailScreenState();
@@ -26,22 +16,33 @@ class PlaylistDetailScreen extends StatefulWidget {
 
 class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
   final PlaylistService _playlistService = PlaylistService();
+  final AudioService _audioService = AudioService();
 
-  
+  Stream<List<Song>> _getPlaylistSongs() {
+    return _playlistService.getPlaylistSongs(widget.playlistId);
+  }
+
+  Future<void> _playPlaylist(List<Song> songs, int startIndex) async {
+    await _audioService.playSongs(playlist: songs, startIndex: startIndex);
+  }
+
   // Method to delete a song
   Future<void> _deleteSong(String songId, String songTitle) async {
     try {
       await _playlistService.removeSongFromPlaylist(widget.playlistId, songId);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Removed "$songTitle" from playlist'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Removed "$songTitle" from playlist'),
+            backgroundColor: Colors.green,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error removing song: $e'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error removing song: $e'), backgroundColor: Colors.red),
+        );
       }
     }
   }
@@ -54,7 +55,11 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
         backgroundColor: AppColors.backgroundDark,
         title: Text(
           widget.playlistName,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: AppColors.textPrimary),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            color: AppColors.textPrimary,
+          ),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
@@ -69,9 +74,8 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
           ),
         ],
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream:
-            FirebaseFirestore.instance.collection('playlists').doc(widget.playlistId).collection('songs').snapshots(),
+      body: StreamBuilder<List<Song>>(
+        stream: _getPlaylistSongs(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(
@@ -90,18 +94,27 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
             return const Center(child: CircularProgressIndicator(color: Colors.green));
           }
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          final songs = snapshot.data ?? const <Song>[];
+          if (songs.isEmpty) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(40.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.music_note_outlined, size: 80, color: AppColors.textMuted.withOpacity(0.5)),
+                    Icon(
+                      Icons.music_note_outlined,
+                      size: 80,
+                      color: AppColors.textMuted.withOpacity(0.5),
+                    ),
                     const SizedBox(height: 20),
                     const Text(
                       'No songs in this playlist',
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     const Text(
@@ -116,47 +129,42 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
           }
 
           return ListView.builder(
-            itemCount: snapshot.data!.docs.length,
+            itemCount: songs.length,
             itemBuilder: (context, index) {
-              var song = snapshot.data!.docs[index];
-              var songData = song.data() as Map<String, dynamic>;
-              String songId = song.id;
-              String title = songData['title'] ?? 'Unknown Title';
-              String artist = songData['artist'] ?? 'Unknown Artist';
-              String album = songData['album'] ?? '';
-              String duration = songData['duration'] ?? '0:00';
-              String imageURL = songData['imageURL'] ?? '';
-              String audioURL = songData['audioURL'] ?? '';
+              final song = songs[index];
 
               return Card(
                 color: AppColors.backgroundMedium,
                 margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                 child: ListTile(
-                  leading: ClipRRect(
-                    borderRadius: BorderRadius.circular(4.0),
-                    child: Image.network(
-                      imageURL,
-                      width: 50,
-                      height: 50,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: 50,
-                          height: 50,
-                          color: AppColors.textMuted.withOpacity(0.3),
-                          child: const Icon(Icons.music_note, color: AppColors.textMuted),
-                        );
-                      },
+                  leading: SizedBox(
+                    width: 50.0,
+                    height: 50.0,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4.0),
+                      child: Image.network(
+                        song.imageUrl,
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container();
+                        },
+                      ),
                     ),
                   ),
                   title: Text(
-                    title,
-                    style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 15),
+                    song.title,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   subtitle: Text(
-                    artist + (album.isNotEmpty ? ' • $album' : ''),
+                    song.artist + (song.album.isNotEmpty ? ' • ${song.album}' : ''),
                     style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -164,13 +172,16 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(duration, style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+                      Text(
+                        song.duration,
+                        style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                      ),
                       PopupMenuButton<String>(
                         icon: const Icon(Icons.remove_circle_outline, color: AppColors.textMuted),
                         color: AppColors.backgroundDark,
                         onSelected: (value) {
                           if (value == 'remove') {
-                            _deleteSong(songId, title);
+                            _deleteSong(song.id, song.title);
                           }
                         },
                         itemBuilder:
@@ -181,7 +192,10 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                                   children: [
                                     Icon(Icons.remove_circle, color: Colors.red),
                                     SizedBox(width: 10),
-                                    Text('Remove from Playlist', style: TextStyle(color: AppColors.textPrimary)),
+                                    Text(
+                                      'Remove from Playlist',
+                                      style: TextStyle(color: AppColors.textPrimary),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -190,14 +204,14 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                     ],
                   ),
                   onTap: () {
-  final AudioService audioService = AudioService();
-  audioService.playSong(
-    audioUrl: audioURL,
-    title: title,
-    artist: artist,
-    imageUrl: imageURL,
-  );
-},
+                    if (song.audioUrl.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Audio URL missing for this song')),
+                      );
+                      return;
+                    }
+                    _playPlaylist(songs, index);
+                  },
                 ),
               );
             },

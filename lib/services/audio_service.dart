@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:vespera/models/song.dart';
 
 class AudioService extends ChangeNotifier {
   static final AudioService _instance = AudioService._internal();
@@ -26,6 +27,9 @@ class AudioService extends ChangeNotifier {
   Duration get duration => _duration;
   Duration get position => _position;
   bool get hasCurrentSong => _currentAudioUrl != null;
+
+  List<Song> _currentSongs = const [];
+  int _currentIndex = 0;
 
   Future<void> playSong({
     required String audioUrl,
@@ -87,4 +91,27 @@ class AudioService extends ChangeNotifier {
     _audioPlayer.dispose();
     super.dispose();
   }
+
+  Future<void> playSongs({
+    required List<Song> playlist,
+    required int startIndex,
+  }) async {
+    if (playlist.isEmpty || startIndex < 0 || startIndex >= playlist.length) return;
+
+    _currentSongs = playlist;
+    _currentIndex = startIndex;
+
+    final current = _currentSongs[_currentIndex];
+    if (current.audioUrl.isEmpty) return;
+
+    // Reuse your existing single-track play
+    await playSong(
+      audioUrl: current.audioUrl,
+      title: current.title,
+      artist: current.artist,
+      imageUrl: current.imageUrl,
+    );
+  }
+
+  // Optionally add next/prev using _currentSongs and _currentIndex
 }
