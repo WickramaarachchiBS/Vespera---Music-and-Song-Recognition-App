@@ -210,6 +210,9 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                       );
                       return;
                     }
+                    print(song.title);
+                    print(song.artist);
+                    print(song.audioUrl);
                     _playPlaylist(songs, index);
                   },
                 ),

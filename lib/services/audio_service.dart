@@ -77,8 +77,13 @@ class AudioService extends ChangeNotifier {
   Future<void> togglePlayPause() async {
     if (_isPlaying) {
       await _audioPlayer.pause();
+      _isPlaying = false;
+      print('Paused');
     } else {
+      print('Playing');
       await _audioPlayer.play();
+      _isPlaying = true;
+      
     }
   }
 

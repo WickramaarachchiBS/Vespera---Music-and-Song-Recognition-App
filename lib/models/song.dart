@@ -28,7 +28,7 @@ class Song {
       album: (data['album'] as String?)?.trim() ?? '',
       duration: (data['duration'] as String?)?.trim() ?? '0:00',
       imageUrl: (data['imageURL'] as String?)?.trim() ?? '',
-      audioUrl: (data['storageUrl'] as String?)?.trim() ?? '',
+      audioUrl: (data['audioUrl'] as String?)?.trim() ?? '',
     );
   }
 
