@@ -1,19 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:vespera/services/audio_service.dart';
 
 class PlayerScreen extends StatefulWidget {
-  const PlayerScreen({super.key});
+  final String audioUrl;
+  const PlayerScreen({super.key, required this.audioUrl});
 
   @override
   State<PlayerScreen> createState() => _PlayerScreenState();
 }
 
 class _PlayerScreenState extends State<PlayerScreen> {
-  double _sliderValue = 0.3; // Example value
+  final AudioService _audioService = AudioService();
+  double _sliderValue = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioService.addListener(_updateState);
+  }
+
+  @override
+  void dispose() {
+    _audioService.removeListener(_updateState);
+    super.dispose();
+  }
+
+  void _updateState() {
+    if (mounted) {
+      setState(() {
+        if (_audioService.duration.inMilliseconds > 0) {
+          _sliderValue = _audioService.position.inMilliseconds / _audioService.duration.inMilliseconds;
+        }
+      });
+    }
+  }
+
+  Future<void> _seekToPosition(double value) async {
+    final position = Duration(milliseconds: (value * _audioService.duration.inMilliseconds).toInt());
+    await _audioService.seekTo(position);
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Get screen dimensions
-    // final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
@@ -35,10 +71,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       Navigator.pop(context);
                     },
                   ),
-                  const Text(
-                    'PLAYING FROM YOUR LIBRARY',
-                    style: TextStyle(color: Colors.white, fontSize: 12),
-                  ),
+                  const Text('PLAYING FROM YOUR LIBRARY', style: TextStyle(color: Colors.white, fontSize: 12)),
                   const Icon(Icons.more_vert, color: Colors.white, size: 30),
                 ],
               ),
@@ -49,16 +82,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 height: screenWidth * 0.8,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  image: const DecorationImage(
-                    image: AssetImage('assets/newJeans.jpg'),
+                  image: DecorationImage(
+                    image: _audioService.currentImageUrl != null ? NetworkImage(_audioService.currentImageUrl!) : const AssetImage('assets/dandelion.jpg') as ImageProvider,
                     fit: BoxFit.cover,
                   ),
                   boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.5),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
+                    BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 20, offset: const Offset(0, 10)),
                   ],
                 ),
               ),
@@ -66,26 +95,27 @@ class _PlayerScreenState extends State<PlayerScreen> {
               // Song Title and Artist
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'New Jeans',
-                          style: TextStyle(
+                          _audioService.currentSongTitle ?? 'Unknown Song',
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 26,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        Text('NewJeans', style: TextStyle(color: Colors.grey, fontSize: 18)),
+                        Text(
+                          _audioService.currentArtist ?? 'Unknown Artist',
+                          style: const TextStyle(color: Colors.grey, fontSize: 18),
+                        ),
                       ],
                     ),
-                    Column(
-                      children: [Icon(Icons.add_circle_outline, color: Colors.white, size: 30)],
-                    ),
+                    const Column(children: [Icon(Icons.add_circle_outline, color: Colors.white, size: 30)]),
                   ],
                 ),
               ),
@@ -100,7 +130,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       trackHeight: 4,
                     ),
                     child: Slider(
-                      value: _sliderValue,
+                      value: _sliderValue.clamp(0.0, 1.0),
                       min: 0,
                       max: 1,
                       activeColor: Colors.white,
@@ -110,15 +140,18 @@ class _PlayerScreenState extends State<PlayerScreen> {
                           _sliderValue = value;
                         });
                       },
+                      onChangeEnd: (value) {
+                        _seekToPosition(value);
+                      },
                     ),
                   ),
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.symmetric(horizontal: 12.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('1:21', style: TextStyle(color: Colors.grey)),
-                        Text('3:45', style: TextStyle(color: Colors.grey)),
+                        Text(_formatDuration(_audioService.position), style: const TextStyle(color: Colors.grey)),
+                        Text(_formatDuration(_audioService.duration), style: const TextStyle(color: Colors.grey)),
                       ],
                     ),
                   ),
@@ -126,18 +159,37 @@ class _PlayerScreenState extends State<PlayerScreen> {
               ),
 
               // Player Controls
-              const Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Icon(Icons.shuffle, color: Colors.grey, size: 30),
-                  Icon(Icons.skip_previous, color: Colors.white, size: 40),
-                  CircleAvatar(
-                    radius: 35,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.pause, color: Colors.black, size: 45),
+                  const Icon(Icons.shuffle, color: Colors.grey, size: 30),
+                  IconButton(
+                    icon: const Icon(Icons.skip_previous, color: Colors.white, size: 40),
+                    onPressed: () async {
+                      await _audioService.seekTo(Duration.zero);
+                    },
                   ),
-                  Icon(Icons.skip_next, color: Colors.white, size: 40),
-                  Icon(Icons.repeat, color: Colors.grey, size: 30),
+                  GestureDetector(
+                    onTap: () {
+                      _audioService.togglePlayPause();
+                    },
+                    child: CircleAvatar(
+                      radius: 35,
+                      backgroundColor: Colors.white,
+                      child: Icon(
+                        _audioService.isPlaying ? Icons.pause : Icons.play_arrow,
+                        color: Colors.black,
+                        size: 45,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.skip_next, color: Colors.white, size: 40),
+                    onPressed: () async {
+                      // TODO: Implement next track functionality.
+                    },
+                  ),
+                  const Icon(Icons.repeat, color: Colors.grey, size: 30),
                 ],
               ),
 

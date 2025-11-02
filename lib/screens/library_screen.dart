@@ -172,7 +172,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     var playlistData = playlist.data() as Map<String, dynamic>;
                     String playlistId = playlist.id;
                     String name = playlistData['name'] ?? 'Untitled';
-                    String imageURL = playlistData['imageURL'] ?? 'assets/dandelion.jpg';
+                    String imageURL = playlistData['imageURL'] ?? '';
+                    String audioURL = playlistData['audioURL'] ?? '';
 
                     return Card(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
@@ -212,6 +213,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                   (context) => PlaylistDetailScreen(
                                     playlistId: playlistId,
                                     playlistName: name,
+                                    imageURL: imageURL,
+                                    audioURL: audioURL,
                                   ),
                             ),
                           );
