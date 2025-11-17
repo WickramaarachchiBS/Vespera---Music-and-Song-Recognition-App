@@ -3,6 +3,7 @@ import 'package:vespera/colors.dart';
 import 'package:vespera/models/song.dart';
 import 'package:vespera/services/search_service.dart';
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -16,16 +17,30 @@ class _SearchScreenState extends State<SearchScreen> {
   final SearchService _searchService = SearchService();
   List<Song> _searchResults = [];
   bool _isLoading = false;
-  List<Map<String, String>> recentSearches = [];
+  List<Map<String, dynamic>> recentSearches = [];
 
   // Debounce to avoid hitting Firestore on every keystroke
   Timer? _debounce;
 
   @override
+  void initState() {
+    super.initState();
+  }
+  @override
   void dispose() {
     _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadRecentSearches() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    final recent = await _searchService.getRecentSongSearches(userId);
+    setState(() {
+      recentSearches = recent;
+    });
   }
 
   Future<void> _performSearch(String query) async {
@@ -52,19 +67,17 @@ class _SearchScreenState extends State<SearchScreen> {
     });
   }
 
-  void _addToRecent(Song song) {
-    final item = {'title': song.title, 'artist': song.artist};
-    // Remove any existing duplicate
-    recentSearches.removeWhere(
-      (e) => e['title'] == item['title'] && e['artist'] == item['artist'],
-    );
-    setState(() {
-      recentSearches.insert(0, item);
-      if (recentSearches.length > 10) {
-        recentSearches.removeLast();
-      }
-    });
+  Future<void> _addToRecent(Song song) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    // Save to Firestore
+    await _searchService.addRecentSongSearch(userId: userId, song: song);
+
+    // Reload recent searches to update UI
+    await _loadRecentSearches();
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -85,15 +98,6 @@ class _SearchScreenState extends State<SearchScreen> {
             child: CircleAvatar(backgroundImage: AssetImage('assets/profilePic.jpg')),
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: AppColors.textPrimary, size: 25),
-            onPressed: () {
-              // Add songs to firebase function (TEMP)
-              // debugPrint('Add song button pressed');
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [

@@ -28,7 +28,6 @@ class SearchService {
           .collection('songs')
           .where('titleLowercase', isGreaterThanOrEqualTo: q)
           .where('titleLowercase', isLessThanOrEqualTo: end)
-          .limit(25)
           .get();
 
       final artistFuture = _firestore
@@ -49,6 +48,7 @@ class SearchService {
           }
         }
       }
+      print('Found ${merged.length} songs for query: $q');
       return merged;
     } catch (e) {
       // ignore: avoid_print
