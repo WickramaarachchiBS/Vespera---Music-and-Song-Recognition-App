@@ -4,6 +4,7 @@ import 'package:vespera/models/song.dart';
 import 'package:vespera/services/search_service.dart';
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:vespera/services/audio_service.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -15,6 +16,7 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   final SearchService _searchService = SearchService();
+  final AudioService _audioService = AudioService();
   List<Song> _searchResults = [];
   bool _isLoading = false;
   List<Map<String, dynamic>> recentSearches = [];
@@ -25,7 +27,9 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     super.initState();
+    _loadRecentSearches();
   }
+
   @override
   void dispose() {
     _debounce?.cancel();
@@ -33,14 +37,25 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
+  Future<void> _playPlaylist(List<Song> songs, int startIndex) async {
+    await _audioService.playSongs(playlist: songs, startIndex: startIndex);
+  }
+
   Future<void> _loadRecentSearches() async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return;
 
-    final recent = await _searchService.getRecentSongSearches(userId);
-    setState(() {
-      recentSearches = recent;
-    });
+    try {
+      final recent = await _searchService.getRecentSongSearches(userId);
+      if (mounted) {
+        setState(() {
+          recentSearches = recent;
+          print('recentSearches loaded: ${recentSearches.length} items');
+        });
+      }
+    } catch (e) {
+      print('Error loading recent searches: $e');
+    }
   }
 
   Future<void> _performSearch(String query) async {
@@ -78,7 +93,6 @@ class _SearchScreenState extends State<SearchScreen> {
     await _loadRecentSearches();
   }
 
-
   @override
   Widget build(BuildContext context) {
     final hasQuery = _searchController.text.trim().isNotEmpty;
@@ -111,18 +125,19 @@ class _SearchScreenState extends State<SearchScreen> {
                 hintText: 'Search for songs, artists...',
                 hintStyle: TextStyle(color: AppColors.textPrimary.withOpacity(0.5)),
                 prefixIcon: const Icon(Icons.search, color: AppColors.textPrimary, size: 25),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, color: AppColors.textPrimary),
-                        onPressed: () {
-                          setState(() {
-                            _searchController.clear();
-                            _searchResults = [];
-                            _isLoading = false;
-                          });
-                        },
-                      )
-                    : null,
+                suffixIcon:
+                    _searchController.text.isNotEmpty
+                        ? IconButton(
+                          icon: const Icon(Icons.clear, color: AppColors.textPrimary),
+                          onPressed: () {
+                            setState(() {
+                              _searchController.clear();
+                              _searchResults = [];
+                              _isLoading = false;
+                            });
+                          },
+                        )
+                        : null,
                 filled: true,
                 fillColor: AppColors.textPrimary.withOpacity(0.1),
                 border: OutlineInputBorder(
@@ -138,132 +153,145 @@ class _SearchScreenState extends State<SearchScreen> {
 
           // Results or Recent Searches
           Expanded(
-            child: hasQuery
-                ? _isLoading
-                    ? const Center(
-                        child: CircularProgressIndicator(color: AppColors.accentBlue),
-                      )
-                    : _searchResults.isEmpty
+            child:
+                hasQuery
+                    ? _isLoading
+                        ? const Center(
+                          child: CircularProgressIndicator(color: AppColors.accentBlue),
+                        )
+                        : _searchResults.isEmpty
                         ? Center(
-                            child: Text(
-                              'No results found',
-                              style: TextStyle(
-                                color: AppColors.textPrimary.withOpacity(0.5),
-                                fontSize: 16,
-                              ),
+                          child: Text(
+                            'No results found',
+                            style: TextStyle(
+                              color: AppColors.textPrimary.withOpacity(0.5),
+                              fontSize: 16,
                             ),
-                          )
+                          ),
+                        )
                         : ListView.separated(
-                            itemCount: _searchResults.length,
-                            separatorBuilder: (_, __) => Divider(
-                              color: AppColors.textPrimary.withOpacity(0.08),
-                              height: 1,
-                            ),
+                          itemCount: _searchResults.length,
+                          separatorBuilder:
+                              (_, __) => Divider(
+                                color: AppColors.textPrimary.withOpacity(0.08),
+                                height: 1,
+                              ),
+                          itemBuilder: (context, index) {
+                            final song = _searchResults[index];
+                            return ListTile(
+                              leading:
+                                  song.imageUrl != null && song.imageUrl!.isNotEmpty
+                                      ? CircleAvatar(backgroundImage: NetworkImage(song.imageUrl!))
+                                      : const CircleAvatar(child: Icon(Icons.music_note)),
+                              title: Text(
+                                song.title,
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: Text(
+                                song.artist,
+                                style: TextStyle(color: AppColors.textPrimary.withOpacity(0.7)),
+                              ),
+                              onTap: () {
+                                _addToRecent(song);
+
+                                if (song.audioUrl.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Audio URL missing for this song'),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                print(song.title);
+                                print(song.artist);
+                                print(song.audioUrl);
+                                _playPlaylist([song], 0);
+                              },
+                            );
+                          },
+                        )
+                    : recentSearches.isEmpty
+                    ? Center(
+                      child: Text(
+                        'No recent searches',
+                        style: TextStyle(
+                          color: AppColors.textPrimary.withOpacity(0.5),
+                          fontSize: 16,
+                        ),
+                      ),
+                    )
+                    : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Recent Searches',
+                                style: TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    recentSearches.clear();
+                                  });
+                                },
+                                child: const Text(
+                                  'Clear All',
+                                  style: TextStyle(color: AppColors.accentBlue),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: recentSearches.length,
                             itemBuilder: (context, index) {
-                              final song = _searchResults[index];
+                              final item = recentSearches[index];
                               return ListTile(
-                                leading: song.imageUrl != null && song.imageUrl!.isNotEmpty
-                                    ? CircleAvatar(backgroundImage: NetworkImage(song.imageUrl!))
-                                    : const CircleAvatar(
-                                        child: Icon(Icons.music_note),
-                                      ),
+                                leading: const Icon(Icons.history, color: AppColors.textPrimary),
                                 title: Text(
-                                  song.title,
+                                  item['title']!,
                                   style: const TextStyle(
                                     color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                                 subtitle: Text(
-                                  song.artist,
-                                  style: TextStyle(color: AppColors.textPrimary.withOpacity(0.7)),
+                                  item['artist']!,
+                                  style: TextStyle(color: AppColors.textPrimary.withOpacity(0.6)),
+                                ),
+                                trailing: IconButton(
+                                  icon: Icon(
+                                    Icons.close,
+                                    color: AppColors.textPrimary.withOpacity(0.6),
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      recentSearches.removeAt(index);
+                                    });
+                                  },
                                 ),
                                 onTap: () {
-                                  _addToRecent(song);
-                                  // TODO: navigate to player or open song details
+                                  _searchController.text = item['title']!;
+                                  _onSearchChanged(item['title']!);
                                 },
                               );
                             },
-                          )
-                : recentSearches.isEmpty
-                    ? Center(
-                        child: Text(
-                          'No recent searches',
-                          style: TextStyle(
-                            color: AppColors.textPrimary.withOpacity(0.5),
-                            fontSize: 16,
                           ),
                         ),
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'Recent Searches',
-                                  style: TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      recentSearches.clear();
-                                    });
-                                  },
-                                  child: const Text(
-                                    'Clear All',
-                                    style: TextStyle(color: AppColors.accentBlue),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: ListView.builder(
-                              itemCount: recentSearches.length,
-                              itemBuilder: (context, index) {
-                                final item = recentSearches[index];
-                                return ListTile(
-                                  leading: const Icon(Icons.history, color: AppColors.textPrimary),
-                                  title: Text(
-                                    item['title']!,
-                                    style: const TextStyle(
-                                      color: AppColors.textPrimary,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    item['artist']!,
-                                    style: TextStyle(color: AppColors.textPrimary.withOpacity(0.6)),
-                                  ),
-                                  trailing: IconButton(
-                                    icon: Icon(
-                                      Icons.close,
-                                      color: AppColors.textPrimary.withOpacity(0.6),
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        recentSearches.removeAt(index);
-                                      });
-                                    },
-                                  ),
-                                  onTap: () {
-                                    _searchController.text = item['title']!;
-                                    _onSearchChanged(item['title']!);
-                                  },
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
+                      ],
+                    ),
           ),
         ],
       ),
