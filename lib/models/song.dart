@@ -28,13 +28,24 @@ class Song {
     final title = (data['title'] as String? ?? '').trim();
     final artist = (data['artist'] as String? ?? '').trim();
     
+    // Handle duration - can be int (seconds) or String (formatted)
+    String durationStr = '0:00';
+    final durationData = data['duration'];
+    if (durationData is int) {
+      final minutes = durationData ~/ 60;
+      final seconds = durationData % 60;
+      durationStr = '$minutes:${seconds.toString().padLeft(2, '0')}';
+    } else if (durationData is String) {
+      durationStr = durationData.trim();
+    }
+    
     return Song(
       id: doc.id,
       title: (data['title'] as String?)?.trim() ?? 'Unknown Title',
       artist: (data['artist'] as String?)?.trim() ?? 'Unknown Artist',
       album: (data['album'] as String?)?.trim() ?? '',
-      duration: (data['duration'] as String?)?.trim() ?? '0:00',
-      imageUrl: (data['imageURL'] as String?)?.trim() ?? '',
+      duration: durationStr,
+      imageUrl: (data['imageURL'] as String?)?.trim() ?? (data['imageUrl'] as String?)?.trim() ?? '',
       audioUrl: (data['audioUrl'] as String?)?.trim() ?? '',
       titleLowercase: (data['titleLowercase'] as String?) ?? title.toLowerCase(),
       artistLowercase: (data['artistLowercase'] as String?) ?? artist.toLowerCase(),

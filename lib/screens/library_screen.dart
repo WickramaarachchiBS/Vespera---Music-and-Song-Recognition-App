@@ -60,7 +60,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   //USE A CUSTOM ICON FOR THIS
                   icon: const Icon(Icons.search_rounded, size: 30, color: AppColors.textPrimary),
                   // Handle search button press
-                  onPressed: () {},
+                  onPressed: () {
+                    print('Search button pressed. Nothing happens yet.');
+                  },
                 ),
               ),
               Container(

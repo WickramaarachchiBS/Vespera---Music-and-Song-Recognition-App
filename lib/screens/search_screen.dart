@@ -1,10 +1,12 @@
+import 'dart:async';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
 import 'package:vespera/models/song.dart';
-import 'package:vespera/services/search_service.dart';
-import 'dart:async';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:vespera/services/audio_service.dart';
+import 'package:vespera/services/search_service.dart';
+import 'package:vespera/services/addSongsData.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -82,6 +84,8 @@ class _SearchScreenState extends State<SearchScreen> {
     });
   }
 
+  
+
   Future<void> _addToRecent(Song song) async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return;
@@ -112,6 +116,18 @@ class _SearchScreenState extends State<SearchScreen> {
             child: CircleAvatar(backgroundImage: AssetImage('assets/profilePic.jpg')),
           ),
         ),
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 8.0),
+            child: IconButton(
+              icon: const Icon(Icons.add, size: 30, color: AppColors.textPrimary),
+              onPressed: () {
+                AddSongsData.addSampleSongs(context);
+                print('Add button pressed. Adding songs to database');
+              },
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -205,9 +221,9 @@ class _SearchScreenState extends State<SearchScreen> {
                                   );
                                   return;
                                 }
-                                print(song.title);
-                                print(song.artist);
-                                print(song.audioUrl);
+                                print('\x1B[32m${song.title}\x1B[0m'); // Green text
+                                print('\x1B[32m${song.artist}\x1B[0m');
+                                print('\x1B[32m${song.audioUrl}\x1B[0m');
                                 _playPlaylist([song], 0);
                               },
                             );
