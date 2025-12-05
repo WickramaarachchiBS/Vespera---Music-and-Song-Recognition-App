@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:vespera/services/audio_service.dart';
+import 'package:vespera/components/add_to_playlist_modal.dart';
 
 class PlayerScreen extends StatefulWidget {
   final String audioUrl;
+
   const PlayerScreen({super.key, required this.audioUrl});
 
   @override
@@ -29,14 +31,17 @@ class _PlayerScreenState extends State<PlayerScreen> {
     if (mounted) {
       setState(() {
         if (_audioService.duration.inMilliseconds > 0) {
-          _sliderValue = _audioService.position.inMilliseconds / _audioService.duration.inMilliseconds;
+          _sliderValue =
+              _audioService.position.inMilliseconds / _audioService.duration.inMilliseconds;
         }
       });
     }
   }
 
   Future<void> _seekToPosition(double value) async {
-    final position = Duration(milliseconds: (value * _audioService.duration.inMilliseconds).toInt());
+    final position = Duration(
+      milliseconds: (value * _audioService.duration.inMilliseconds).toInt(),
+    );
     await _audioService.seekTo(position);
   }
 
@@ -70,7 +75,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       Navigator.pop(context);
                     },
                   ),
-                  const Text('PLAYING FROM YOUR LIBRARY', style: TextStyle(color: Colors.white, fontSize: 12)),
+                  const Text(
+                    'PLAYING FROM YOUR LIBRARY',
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
                   const Icon(Icons.more_vert, color: Colors.white, size: 30),
                 ],
               ),
@@ -82,11 +90,18 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   image: DecorationImage(
-                    image: _audioService.currentImageUrl != null ? NetworkImage(_audioService.currentImageUrl!) : const AssetImage('assets/dandelion.jpg') as ImageProvider,
+                    image:
+                        _audioService.currentImageUrl != null
+                            ? NetworkImage(_audioService.currentImageUrl!)
+                            : const AssetImage('assets/dandelion.jpg') as ImageProvider,
                     fit: BoxFit.cover,
                   ),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 20, offset: const Offset(0, 10)),
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.5),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
                   ],
                 ),
               ),
@@ -114,7 +129,26 @@ class _PlayerScreenState extends State<PlayerScreen> {
                         ),
                       ],
                     ),
-                    const Column(children: [Icon(Icons.add_circle_outline, color: Colors.white, size: 30)]),
+                    Column(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.add_circle_outline, color: Colors.white, size: 30),
+                          onPressed: () {
+                            final currentSong = _audioService.currentSong;
+                            if (currentSong != null) {
+                              AddToPlaylistModal.show(context, currentSong);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('No song is currently playing'),
+                                  backgroundColor: Colors.orange,
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -149,8 +183,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(_formatDuration(_audioService.position), style: const TextStyle(color: Colors.grey)),
-                        Text(_formatDuration(_audioService.duration), style: const TextStyle(color: Colors.grey)),
+                        Text(
+                          _formatDuration(_audioService.position),
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                        Text(
+                          _formatDuration(_audioService.duration),
+                          style: const TextStyle(color: Colors.grey),
+                        ),
                       ],
                     ),
                   ),
@@ -162,12 +202,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   const Icon(Icons.shuffle, color: Colors.grey, size: 30),
+                  // previous button
                   IconButton(
                     icon: const Icon(Icons.skip_previous, color: Colors.white, size: 40),
                     onPressed: () async {
                       await _audioService.seekTo(Duration.zero);
                     },
                   ),
+                  // play/pause button
                   GestureDetector(
                     onTap: () {
                       _audioService.togglePlayPause();
@@ -182,6 +224,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       ),
                     ),
                   ),
+                  // next button
                   IconButton(
                     icon: const Icon(Icons.skip_next, color: Colors.white, size: 40),
                     onPressed: () async {

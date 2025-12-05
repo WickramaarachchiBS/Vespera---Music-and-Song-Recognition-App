@@ -31,6 +31,28 @@ class AudioService extends ChangeNotifier {
   List<Song> _currentSongs = const [];
   int _currentIndex = 0;
 
+  // Get current song as Song object
+  Song? get currentSong {
+    if (_currentSongs.isNotEmpty && _currentIndex >= 0 && _currentIndex < _currentSongs.length) {
+      return _currentSongs[_currentIndex];
+    }
+    // If no playlist context, create a minimal Song from current data
+    if (_currentAudioUrl != null && _currentSongTitle != null) {
+      return Song(
+        id: _currentAudioUrl!.hashCode.toString(),
+        title: _currentSongTitle ?? 'Unknown',
+        artist: _currentArtist ?? 'Unknown',
+        album: '',
+        duration: '0:00',
+        imageUrl: _currentImageUrl ?? '',
+        audioUrl: _currentAudioUrl!,
+        titleLowercase: (_currentSongTitle ?? '').toLowerCase(),
+        artistLowercase: (_currentArtist ?? '').toLowerCase(),
+      );
+    }
+    return null;
+  }
+
   Future<void> playSong({
     required String audioUrl,
     String? title,
