@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:vespera/screens/home_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:vespera/screens/common_screen.dart';
 import 'package:vespera/screens/welcome_screen.dart';
 
 class AuthWrapper extends StatelessWidget {
@@ -16,7 +16,7 @@ class AuthWrapper extends StatelessWidget {
         }
 
         if (snapshot.hasData) {
-          return const HomeScreen();
+          return const CommonScreen();
         }
 
         return const WelcomeScreen();

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:vespera/colors.dart';
+import 'package:vespera/providers/user_provider.dart';
 import 'package:vespera/screens/signup_screen.dart';
+import 'package:vespera/services/auth_service.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -10,16 +13,64 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
+  final AuthService _authService = AuthService();
+
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  //HANDLE SIGN IN
+  Future<void> _onSignInPressed() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
+
+    try {
+      await _authService.signIn(email: email, password: password);
+
+      if (mounted) {
+        await Provider.of<UserProvider>(context, listen: false).loadUserData();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Signed in successfully!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        // Navigate to home screen
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -82,7 +133,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(color: Color(0xFF1DB954)),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 1, 149, 247)),
                     ),
                   ),
                   validator: (value) {
@@ -130,7 +181,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(color: Color(0xFF1DB954)),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 1, 149, 247)),
                     ),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -155,21 +206,26 @@ class _SignInScreenState extends State<SignInScreen> {
 
                 // LOG IN BUTTON
                 ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      // Handle login
-                    }
-                  },
+                  onPressed: _isLoading ? null : _onSignInPressed,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.authButtonPrimary,
                     foregroundColor: Colors.black,
                     minimumSize: Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                   ),
-                  child: Text(
-                    'Sign in',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
+                  child: _isLoading
+                      ? SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(const Color.fromARGB(255, 184, 103, 27)),
+                          ),
+                        )
+                      : Text(
+                          'Sign in',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
                 ),
 
                 // LOG IN WITH GOOGLE BUTTON

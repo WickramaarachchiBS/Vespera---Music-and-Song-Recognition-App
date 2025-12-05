@@ -15,46 +15,79 @@ class CommonScreen extends StatefulWidget {
 class _CommonScreenState extends State<CommonScreen> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _widgetOptions = <Widget>[
-    HomeScreen(),
-    SearchScreen(),
-    LibraryScreen(),
-  ];
+  // Navigator keys for each tab (except Whisper which opens separately)
+  final GlobalKey<NavigatorState> _homeKey = GlobalKey<NavigatorState>();
+  final GlobalKey<NavigatorState> _searchKey = GlobalKey<NavigatorState>();
+  final GlobalKey<NavigatorState> _libraryKey = GlobalKey<NavigatorState>();
+
+  Future<bool> _onWillPop() async {
+    final keys = [_homeKey, _searchKey, _libraryKey];
+    final currentKey = keys[_selectedIndex];
+    if (currentKey.currentState?.canPop() ?? false) {
+      currentKey.currentState!.pop();
+      return false; // handled inside the tab
+    }
+    return true; // allow app to pop
+  }
 
   void _onItemTapped(int index) {
     if (index == 3) {
       // Open Whisper as separate screen
       Navigator.of(context).push(MaterialPageRoute(builder: (_) => const WhisperScreen()));
-    } else {
-      setState(() {
-        _selectedIndex = index;
-      });
+      return;
     }
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: [
-          Expanded(child: Center(child: _widgetOptions.elementAt(_selectedIndex))),
-          const MiniMusicPlayer(),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.black,
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-          BottomNavigationBarItem(icon: Icon(Icons.library_music), label: 'Library'),
-          BottomNavigationBarItem(icon: Icon(Icons.earbuds), label: 'Whisper'),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        body: Column(
+          children: [
+            Expanded(
+              child: IndexedStack(
+                index: _selectedIndex,
+                children: [
+                  Navigator(
+                    key: _homeKey,
+                    onGenerateRoute: (settings) =>
+                        MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  ),
+                  Navigator(
+                    key: _searchKey,
+                    onGenerateRoute: (settings) =>
+                        MaterialPageRoute(builder: (_) => const SearchScreen()),
+                  ),
+                  Navigator(
+                    key: _libraryKey,
+                    onGenerateRoute: (settings) =>
+                        MaterialPageRoute(builder: (_) => const LibraryScreen()),
+                  ),
+                ],
+              ),
+            ),
+            const MiniMusicPlayer(),
+          ],
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.black,
+          selectedItemColor: Colors.white,
+          unselectedItemColor: Colors.grey,
+          showUnselectedLabels: true,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
+            BottomNavigationBarItem(icon: Icon(Icons.library_music), label: 'Library'),
+            BottomNavigationBarItem(icon: Icon(Icons.earbuds), label: 'Whisper'),
+          ],
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+        ),
       ),
     );
   }

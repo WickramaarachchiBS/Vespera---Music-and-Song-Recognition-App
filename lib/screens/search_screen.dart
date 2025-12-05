@@ -1,5 +1,12 @@
+import 'dart:async';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
+import 'package:vespera/models/song.dart';
+import 'package:vespera/services/audio_service.dart';
+import 'package:vespera/services/search_service.dart';
+import 'package:vespera/services/addSongsData.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -10,24 +17,90 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final SearchService _searchService = SearchService();
+  final AudioService _audioService = AudioService();
+  List<Song> _searchResults = [];
+  bool _isLoading = false;
+  List<Map<String, dynamic>> recentSearches = [];
 
-  // Sample recent searches - replace with actual data from your database/storage
-  List<Map<String, String>> recentSearches = [
-    {'title': 'Blinding Lights', 'artist': 'The Weeknd'},
-    {'title': 'Shape of You', 'artist': 'Ed Sheeran'},
-    {'title': 'Levitating', 'artist': 'Dua Lipa'},
-    {'title': 'Save Your Tears', 'artist': 'The Weeknd'},
-    {'title': 'Peaches', 'artist': 'Justin Bieber'},
-  ];
+  // Debounce to avoid hitting Firestore on every keystroke
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecentSearches();
+  }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
+  Future<void> _playPlaylist(List<Song> songs, int startIndex) async {
+    await _audioService.playSongs(playlist: songs, startIndex: startIndex);
+  }
+
+  Future<void> _loadRecentSearches() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    try {
+      final recent = await _searchService.getRecentSongSearches(userId);
+      if (mounted) {
+        setState(() {
+          recentSearches = recent;
+          print('recentSearches loaded: ${recentSearches.length} items');
+        });
+      }
+    } catch (e) {
+      print('Error loading recent searches: $e');
+    }
+  }
+
+  Future<void> _performSearch(String query) async {
+    setState(() => _isLoading = true);
+    final results = await _searchService.searchSongs(query);
+    setState(() {
+      _searchResults = results;
+      _isLoading = false;
+    });
+  }
+
+  void _onSearchChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 350), () {
+      final q = value.trim();
+      if (q.isEmpty) {
+        setState(() {
+          _searchResults = [];
+          _isLoading = false;
+        });
+      } else {
+        _performSearch(q);
+      }
+    });
+  }
+
+  
+
+  Future<void> _addToRecent(Song song) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    // Save to Firestore
+    await _searchService.addRecentSongSearch(userId: userId, song: song);
+
+    // Reload recent searches to update UI
+    await _loadRecentSearches();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final hasQuery = _searchController.text.trim().isNotEmpty;
+
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
@@ -37,12 +110,24 @@ class _SearchScreenState extends State<SearchScreen> {
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: AppColors.textPrimary),
         ),
         leading: Container(
-          margin: EdgeInsets.only(left: 15.0),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 3.0),
+          margin: const EdgeInsets.only(left: 15.0),
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 3.0),
             child: CircleAvatar(backgroundImage: AssetImage('assets/profilePic.jpg')),
           ),
         ),
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 8.0),
+            child: IconButton(
+              icon: const Icon(Icons.add, size: 30, color: AppColors.textPrimary),
+              onPressed: () {
+                AddSongsData.addSampleSongs(context);
+                print('Add button pressed. Adding songs to database');
+              },
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -51,18 +136,20 @@ class _SearchScreenState extends State<SearchScreen> {
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               controller: _searchController,
-              style: TextStyle(color: AppColors.textPrimary),
+              style: const TextStyle(color: AppColors.textPrimary),
               decoration: InputDecoration(
                 hintText: 'Search for songs, artists...',
                 hintStyle: TextStyle(color: AppColors.textPrimary.withOpacity(0.5)),
-                prefixIcon: Icon(Icons.search, color: AppColors.textPrimary, size: 25),
+                prefixIcon: const Icon(Icons.search, color: AppColors.textPrimary, size: 25),
                 suffixIcon:
                     _searchController.text.isNotEmpty
                         ? IconButton(
-                          icon: Icon(Icons.clear, color: AppColors.textPrimary),
+                          icon: const Icon(Icons.clear, color: AppColors.textPrimary),
                           onPressed: () {
                             setState(() {
                               _searchController.clear();
+                              _searchResults = [];
+                              _isLoading = false;
                             });
                           },
                         )
@@ -73,18 +160,76 @@ class _SearchScreenState extends State<SearchScreen> {
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               ),
-              onChanged: (value) {
-                setState(() {});
-              },
+              onChanged: _onSearchChanged,
+              onSubmitted: _performSearch,
             ),
           ),
 
-          // Recent Searches Section
+          // Results or Recent Searches
           Expanded(
             child:
-                recentSearches.isEmpty
+                hasQuery
+                    ? _isLoading
+                        ? const Center(
+                          child: CircularProgressIndicator(color: AppColors.accentBlue),
+                        )
+                        : _searchResults.isEmpty
+                        ? Center(
+                          child: Text(
+                            'No results found',
+                            style: TextStyle(
+                              color: AppColors.textPrimary.withOpacity(0.5),
+                              fontSize: 16,
+                            ),
+                          ),
+                        )
+                        : ListView.separated(
+                          itemCount: _searchResults.length,
+                          separatorBuilder:
+                              (_, __) => Divider(
+                                color: AppColors.textPrimary.withOpacity(0.08),
+                                height: 1,
+                              ),
+                          itemBuilder: (context, index) {
+                            final song = _searchResults[index];
+                            return ListTile(
+                              leading:
+                                  song.imageUrl != null && song.imageUrl!.isNotEmpty
+                                      ? CircleAvatar(backgroundImage: NetworkImage(song.imageUrl!))
+                                      : const CircleAvatar(child: Icon(Icons.music_note)),
+                              title: Text(
+                                song.title,
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: Text(
+                                song.artist,
+                                style: TextStyle(color: AppColors.textPrimary.withOpacity(0.7)),
+                              ),
+                              onTap: () {
+                                _addToRecent(song);
+
+                                if (song.audioUrl.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Audio URL missing for this song'),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                print('\x1B[32m${song.title}\x1B[0m'); // Green text
+                                print('\x1B[32m${song.artist}\x1B[0m');
+                                print('\x1B[32m${song.audioUrl}\x1B[0m');
+                                _playPlaylist([song], 0);
+                              },
+                            );
+                          },
+                        )
+                    : recentSearches.isEmpty
                     ? Center(
                       child: Text(
                         'No recent searches',
@@ -102,7 +247,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
+                              const Text(
                                 'Recent Searches',
                                 style: TextStyle(
                                   color: AppColors.textPrimary,
@@ -116,7 +261,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                     recentSearches.clear();
                                   });
                                 },
-                                child: Text(
+                                child: const Text(
                                   'Clear All',
                                   style: TextStyle(color: AppColors.accentBlue),
                                 ),
@@ -128,18 +273,18 @@ class _SearchScreenState extends State<SearchScreen> {
                           child: ListView.builder(
                             itemCount: recentSearches.length,
                             itemBuilder: (context, index) {
-                              final song = recentSearches[index];
+                              final item = recentSearches[index];
                               return ListTile(
-                                leading: Icon(Icons.history, color: AppColors.textPrimary),
+                                leading: const Icon(Icons.history, color: AppColors.textPrimary),
                                 title: Text(
-                                  song['title']!,
-                                  style: TextStyle(
+                                  item['title']!,
+                                  style: const TextStyle(
                                     color: AppColors.textPrimary,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
                                 subtitle: Text(
-                                  song['artist']!,
+                                  item['artist']!,
                                   style: TextStyle(color: AppColors.textPrimary.withOpacity(0.6)),
                                 ),
                                 trailing: IconButton(
@@ -154,8 +299,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                   },
                                 ),
                                 onTap: () {
-                                  // Handle song selection
-                                  _searchController.text = song['title']!;
+                                  _searchController.text = item['title']!;
+                                  _onSearchChanged(item['title']!);
                                 },
                               );
                             },

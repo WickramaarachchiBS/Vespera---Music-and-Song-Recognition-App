@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
 import 'package:vespera/screens/signin_screen.dart';
 import 'package:vespera/services/auth_service.dart';
+import 'package:provider/provider.dart';
+import 'package:vespera/providers/user_provider.dart';
+
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -46,6 +49,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       await _authService.signUp(name: name, email: email, password: password);
 
       if (mounted) {
+        // Load user data into provider after successful sign up
+        await Provider.of<UserProvider>(context, listen: false).loadUserData();
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Welcome to Vesper!'),
@@ -136,7 +142,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(color: Color(0xFF1DB954)),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 1, 149, 247)),
                     ),
                   ),
                   validator: (value) {
@@ -181,7 +187,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(color: Color(0xFF1DB954)),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 1, 149, 247)),
                     ),
                   ),
                   validator: (value) {
@@ -229,7 +235,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(color: Color(0xFF1DB954)),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 1, 149, 247)),
                     ),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -257,17 +263,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                 // SIGN UP BUTTON
                 ElevatedButton(
-                  onPressed: _onSignUpPressed,
+                  onPressed: _isLoading ? null : _onSignUpPressed,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.authButtonPrimary,
                     foregroundColor: Colors.black,
                     minimumSize: Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                   ),
-                  child: Text(
-                    'Sign up',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
+                  child: _isLoading
+                      ? SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Color.fromARGB(255, 184, 103, 27)),
+                          ),
+                        )
+                      : Text(
+                          'Sign up',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
                 ),
 
                 //SIGN UP WITH GOOGLE BUTTON
