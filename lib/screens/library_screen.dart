@@ -21,15 +21,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
       await _playlistService.createPlaylist(playlistName, 'assets/dandelion.jpg');
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Playlist "$playlistName" created!'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Playlist "$playlistName" created!'),
+            backgroundColor: Colors.green,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error creating playlist: $e'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error creating playlist: $e'), backgroundColor: Colors.red),
+        );
       }
     }
   }
@@ -87,11 +90,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Container(
-                  decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.green, width: 2.0))),
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: Colors.green, width: 2.0)),
+                  ),
                   margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                   child: Text(
                     'Playlists',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ),
               ],
@@ -130,11 +139,19 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.library_music_outlined, size: 64, color: AppColors.textMuted.withOpacity(0.5)),
+                          Icon(
+                            Icons.library_music_outlined,
+                            size: 64,
+                            color: AppColors.textMuted.withOpacity(0.5),
+                          ),
                           const SizedBox(height: 16),
                           Text(
                             'No playlists yet',
-                            style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Text(
@@ -182,7 +199,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
                             },
                           ),
                         ),
-                        title: Text(name, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+                        title: Text(
+                          name,
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        // TODO: Add number of songs in the playlist
                         subtitle: Text('Playlist', style: TextStyle(color: AppColors.textMuted)),
                         onTap: () {
                           Navigator.of(context, rootNavigator: false).push(
@@ -194,8 +218,71 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                   ),
                             ),
                           );
-
                         },
+                        // Delete playlist button
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete_outline, color: AppColors.textPrimary),
+                          tooltip: 'Delete playlist',
+                          onPressed: () async {
+                            final confirmed =
+                                await showDialog<bool>(
+                                  context: context,
+                                  builder: (ctx) {
+                                    return AlertDialog(
+                                      backgroundColor: AppColors.backgroundDark,
+                                      title: Text(
+                                        'Delete playlist',
+                                        style: TextStyle(color: AppColors.textPrimary),
+                                      ),
+                                      content: Text(
+                                        'Are you sure you want to delete "$name"? This cannot be undone.',
+                                        style: TextStyle(color: AppColors.textMuted),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.of(ctx).pop(false),
+                                          child: Text(
+                                            'Cancel',
+                                            style: TextStyle(color: AppColors.textPrimary),
+                                          ),
+                                        ),
+                                        TextButton(
+                                          onPressed: () => Navigator.of(ctx).pop(true),
+                                          child: Text(
+                                            'Delete',
+                                            style: TextStyle(color: Colors.redAccent),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ) ??
+                                false;
+
+                            if (confirmed) {
+                              try {
+                                await _playlistService.deletePlaylist(playlistId);
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Deleted "$name"'),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error deleting playlist: $e'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+                          },
+                        ),
                       ),
                     );
                   },
