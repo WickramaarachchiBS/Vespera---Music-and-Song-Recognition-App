@@ -27,7 +27,7 @@ class Song {
     final data = (doc.data() as Map<String, dynamic>?) ?? {};
     final title = (data['title'] as String? ?? '').trim();
     final artist = (data['artist'] as String? ?? '').trim();
-    
+
     // Handle duration - can be int (seconds) or String (formatted)
     String durationStr = '0:00';
     final durationData = data['duration'];
@@ -38,14 +38,15 @@ class Song {
     } else if (durationData is String) {
       durationStr = durationData.trim();
     }
-    
+
     return Song(
       id: doc.id,
       title: (data['title'] as String?)?.trim() ?? 'Unknown Title',
       artist: (data['artist'] as String?)?.trim() ?? 'Unknown Artist',
       album: (data['album'] as String?)?.trim() ?? '',
       duration: durationStr,
-      imageUrl: (data['imageURL'] as String?)?.trim() ?? (data['imageUrl'] as String?)?.trim() ?? '',
+      imageUrl:
+          (data['imageURL'] as String?)?.trim() ?? (data['imageUrl'] as String?)?.trim() ?? '',
       audioUrl: (data['audioUrl'] as String?)?.trim() ?? '',
       titleLowercase: (data['titleLowercase'] as String?) ?? title.toLowerCase(),
       artistLowercase: (data['artistLowercase'] as String?) ?? artist.toLowerCase(),
@@ -59,7 +60,7 @@ class Song {
       'album': album,
       'duration': duration,
       'imageURL': imageUrl,
-      'audioURL': audioUrl,
+      'audioUrl': audioUrl,
       'titleLowercase': title.toLowerCase(),
       'artistLowercase': artist.toLowerCase(),
     };
