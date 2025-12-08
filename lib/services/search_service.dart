@@ -24,18 +24,20 @@ class SearchService {
 
     try {
       print('Searching for songs with query: $q');
-      final titleFuture = _firestore
-          .collection('songs')
-          .where('titleLowercase', isGreaterThanOrEqualTo: q)
-          .where('titleLowercase', isLessThanOrEqualTo: end)
-          .get();
+      final titleFuture =
+          _firestore
+              .collection('songs')
+              .where('titleLowercase', isGreaterThanOrEqualTo: q)
+              .where('titleLowercase', isLessThanOrEqualTo: end)
+              .get();
 
-      final artistFuture = _firestore
-          .collection('songs')
-          .where('artistLowercase', isGreaterThanOrEqualTo: q)
-          .where('artistLowercase', isLessThanOrEqualTo: end)
-          .limit(25)
-          .get();
+      final artistFuture =
+          _firestore
+              .collection('songs')
+              .where('artistLowercase', isGreaterThanOrEqualTo: q)
+              .where('artistLowercase', isLessThanOrEqualTo: end)
+              .limit(25)
+              .get();
 
       final results = await Future.wait([titleFuture, artistFuture]);
 
@@ -57,11 +59,8 @@ class SearchService {
     }
   }
 
-  // Optional: store recent searches per user (song-based)
-  Future<void> addRecentSongSearch({
-    required String userId,
-    required Song song,
-  }) async {
+  // Store recent searches per user
+  Future<void> addRecentSongSearch({required String userId, required Song song}) async {
     final ref = _firestore
         .collection('users')
         .doc(userId)
@@ -76,16 +75,16 @@ class SearchService {
     }, SetOptions(merge: true));
   }
 
-  Future<List<Map<String, dynamic>>> getRecentSongSearches(String userId,
-      {int limit = 10}) async {
+  Future<List<Map<String, dynamic>>> getRecentSongSearches(String userId, {int limit = 10}) async {
     try {
-      final snap = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('recentSongSearches')
-          .orderBy('updatedAt', descending: true)
-          .limit(limit)
-          .get();
+      final snap =
+          await _firestore
+              .collection('users')
+              .doc(userId)
+              .collection('recentSongSearches')
+              .orderBy('updatedAt', descending: true)
+              .limit(limit)
+              .get();
       return snap.docs.map((d) => d.data()).toList();
     } catch (e) {
       // ignore: avoid_print
@@ -95,10 +94,7 @@ class SearchService {
   }
 
   // Optional: store raw query terms
-  Future<void> addRecentQuery({
-    required String userId,
-    required String query,
-  }) async {
+  Future<void> addRecentQuery({required String userId, required String query}) async {
     final docRef = _firestore
         .collection('users')
         .doc(userId)
@@ -113,19 +109,22 @@ class SearchService {
 
   Future<List<String>> getRecentQueries(String userId, {int limit = 8}) async {
     try {
-      final snap = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('recentQueries')
-          .orderBy('updatedAt', descending: true)
-          .limit(limit)
-          .get();
-      return snap.docs.map((d) => (d.data()['query'] as String?) ?? '').where((e) => e.isNotEmpty).toList();
+      final snap =
+          await _firestore
+              .collection('users')
+              .doc(userId)
+              .collection('recentQueries')
+              .orderBy('updatedAt', descending: true)
+              .limit(limit)
+              .get();
+      return snap.docs
+          .map((d) => (d.data()['query'] as String?) ?? '')
+          .where((e) => e.isNotEmpty)
+          .toList();
     } catch (e) {
       // ignore: avoid_print
       print('getRecentQueries error: $e');
       return [];
     }
   }
-  
 }
