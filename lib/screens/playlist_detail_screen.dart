@@ -210,9 +210,9 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                       );
                       return;
                     }
-                    print(song.title);
-                    print(song.artist);
-                    print(song.audioUrl);
+                    print('\x1B[32m${song.title}\x1B[0m');
+                    print('\x1B[32m${song.artist}\x1B[0m');
+                    print('\x1B[32m${song.audioUrl}\x1B[0m');
                     _playPlaylist(songs, index);
                   },
                 ),

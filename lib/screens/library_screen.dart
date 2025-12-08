@@ -207,8 +207,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           ),
                         ),
                         // TODO: Add number of songs in the playlist
-                        subtitle: Text('Playlist', style: TextStyle(color: AppColors.textMuted)),
+                        subtitle: Text(
+                          'No. of Songs',
+                          style: TextStyle(color: AppColors.textMuted),
+                        ),
                         onTap: () {
+                          print('\x1B[32mPlaylist tapped: $name\x1B[0m');
                           Navigator.of(context, rootNavigator: false).push(
                             MaterialPageRoute(
                               builder:

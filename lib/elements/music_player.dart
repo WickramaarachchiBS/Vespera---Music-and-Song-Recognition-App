@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:vespera/services/audio_service.dart';
 import 'package:vespera/components/add_to_playlist_modal.dart';
+import 'package:vespera/services/audio_service.dart';
 
 class PlayerScreen extends StatefulWidget {
   final String audioUrl;
@@ -206,7 +206,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   IconButton(
                     icon: const Icon(Icons.skip_previous, color: Colors.white, size: 40),
                     onPressed: () async {
-                      await _audioService.seekTo(Duration.zero);
+                      await _audioService.playPreviousInPlaylist();
                     },
                   ),
                   // play/pause button
@@ -228,7 +228,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   IconButton(
                     icon: const Icon(Icons.skip_next, color: Colors.white, size: 40),
                     onPressed: () async {
-                      // TODO: Implement next track functionality.
+                      await _audioService.playNextInPlaylist();
                     },
                   ),
                   const Icon(Icons.repeat, color: Colors.grey, size: 30),
