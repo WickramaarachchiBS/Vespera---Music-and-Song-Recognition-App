@@ -7,6 +7,7 @@ import 'package:vespera/models/playlist.dart';
 import 'package:vespera/providers/user_provider.dart';
 import 'package:vespera/services/auth_service.dart';
 import 'package:vespera/services/playlist_service.dart';
+import 'package:vespera/screens/playlist_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -139,7 +140,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 }
 
-                final playlists = snapshot.data ?? [];
+                final allPlaylists = snapshot.data ?? [];
+                // Limit to first 6 playlists
+                final playlists = allPlaylists.take(6).toList();
 
                 if (playlists.isEmpty) {
                   return Container(
@@ -166,8 +169,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       screenWidth: screenWidth,
                       playlist: playlists[i],
                       onTap: () {
-                        // Navigate to playlist detail screen
-                        Navigator.pushNamed(context, '/playlist_detail', arguments: playlists[i]);
+                        print('\x1B[32mPlaylist tapped: ${playlists[i].name}\x1B[0m');
+                        Navigator.of(context, rootNavigator: false).push(
+                          MaterialPageRoute(
+                            builder:
+                                (context) => PlaylistDetailScreen(
+                                  playlistId: playlists[i].id,
+                                  playlistName: playlists[i].name,
+                                ),
+                          ),
+                        );
                       },
                     ),
                   );
@@ -180,11 +191,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         screenWidth: screenWidth,
                         playlist: playlists[i + 1],
                         onTap: () {
-                          // Navigate to playlist detail screen
-                          Navigator.pushNamed(
-                            context,
-                            '/playlist_detail',
-                            arguments: playlists[i + 1],
+                          print('\x1B[32mPlaylist tapped: ${playlists[i + 1].name}\x1B[0m');
+                          Navigator.of(context, rootNavigator: false).push(
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => PlaylistDetailScreen(
+                                    playlistId: playlists[i + 1].id,
+                                    playlistName: playlists[i + 1].name,
+                                  ),
+                            ),
                           );
                         },
                       ),
