@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:vespera/colors.dart';
 import 'package:vespera/components/home_screen_lib_item.dart';
 import 'package:vespera/components/home_screen_rec_item.dart';
+import 'package:vespera/models/playlist.dart';
 import 'package:vespera/providers/user_provider.dart';
 import 'package:vespera/services/auth_service.dart';
+import 'package:vespera/services/playlist_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,6 +16,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final PlaylistService _playlistService = PlaylistService();
+
   @override
   void initState() {
     super.initState();
@@ -29,16 +33,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _handleSignOut() async {
     // Clear user provider data
     Provider.of<UserProvider>(context, listen: false).clearUserData();
-    
+
     // Sign out from AuthService
     await AuthService().signOut();
-    
+
     // Navigate to welcome screen and remove all previous routes
     if (context.mounted) {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        '/welcome',
-        (route) => false,
-      );
+      Navigator.of(context).pushNamedAndRemoveUntil('/welcome', (route) => false);
     }
   }
 
@@ -95,21 +96,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   _handleSignOut();
                 }
               },
-              itemBuilder: (BuildContext context) => [
-                const PopupMenuItem<String>(
-                  value: 'signout',
-                  child: Row(
-                    children: [
-                      Icon(Icons.logout, color: AppColors.textPrimary),
-                      SizedBox(width: 10),
-                      Text(
-                        'Sign Out',
-                        style: TextStyle(color: AppColors.textPrimary),
+              itemBuilder:
+                  (BuildContext context) => [
+                    const PopupMenuItem<String>(
+                      value: 'signout',
+                      child: Row(
+                        children: [
+                          Icon(Icons.logout, color: AppColors.textPrimary),
+                          SizedBox(width: 10),
+                          Text('Sign Out', style: TextStyle(color: AppColors.textPrimary)),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-              ],
+                    ),
+                  ],
             ),
           ),
         ],
@@ -117,34 +116,94 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 15.0),
-              child: Column(
-                children: [
-                  //LIBRARY ITEMS MUST BE AUTOMATED ACCORDING TO NO.OF PLAYLISTS
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      HomeScreenLibItem(screenHeight: screenHeight, screenWidth: screenWidth),
-                      HomeScreenLibItem(screenHeight: screenHeight, screenWidth: screenWidth),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      HomeScreenLibItem(screenHeight: screenHeight, screenWidth: screenWidth),
-                      HomeScreenLibItem(screenHeight: screenHeight, screenWidth: screenWidth),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      HomeScreenLibItem(screenHeight: screenHeight, screenWidth: screenWidth),
-                      HomeScreenLibItem(screenHeight: screenHeight, screenWidth: screenWidth),
-                    ],
-                  ),
-                ],
-              ),
+            // DYNAMIC PLAYLISTS LOADED FROM DATABASE
+            StreamBuilder<List<Playlist>>(
+              stream: _playlistService.getUserPlaylistsTyped(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Container(
+                    margin: EdgeInsets.symmetric(horizontal: 15.0, vertical: 20.0),
+                    child: Center(child: CircularProgressIndicator(color: AppColors.textPrimary)),
+                  );
+                }
+
+                if (snapshot.hasError) {
+                  return Container(
+                    margin: EdgeInsets.symmetric(horizontal: 15.0, vertical: 20.0),
+                    child: Center(
+                      child: Text(
+                        'Error loading playlists',
+                        style: TextStyle(color: AppColors.textMuted),
+                      ),
+                    ),
+                  );
+                }
+
+                final playlists = snapshot.data ?? [];
+
+                if (playlists.isEmpty) {
+                  return Container(
+                    margin: EdgeInsets.symmetric(horizontal: 15.0, vertical: 20.0),
+                    child: Center(
+                      child: Text(
+                        'No playlists yet. Create one to get started!',
+                        style: TextStyle(color: AppColors.textMuted, fontSize: 14),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                }
+
+                // Build playlist items in a grid layout (2 columns)
+                List<Widget> playlistRows = [];
+                for (int i = 0; i < playlists.length; i += 2) {
+                  List<Widget> rowChildren = [];
+
+                  // First item in the row
+                  rowChildren.add(
+                    HomeScreenLibItem(
+                      screenHeight: screenHeight,
+                      screenWidth: screenWidth,
+                      playlist: playlists[i],
+                      onTap: () {
+                        // Navigate to playlist detail screen
+                        Navigator.pushNamed(context, '/playlist_detail', arguments: playlists[i]);
+                      },
+                    ),
+                  );
+
+                  // Second item in the row (if exists)
+                  if (i + 1 < playlists.length) {
+                    rowChildren.add(
+                      HomeScreenLibItem(
+                        screenHeight: screenHeight,
+                        screenWidth: screenWidth,
+                        playlist: playlists[i + 1],
+                        onTap: () {
+                          // Navigate to playlist detail screen
+                          Navigator.pushNamed(
+                            context,
+                            '/playlist_detail',
+                            arguments: playlists[i + 1],
+                          );
+                        },
+                      ),
+                    );
+                  } else {
+                    // Add empty container to maintain spacing
+                    rowChildren.add(SizedBox(width: (screenWidth * 0.5) - 20));
+                  }
+
+                  playlistRows.add(
+                    Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: rowChildren),
+                  );
+                }
+
+                return Container(
+                  margin: EdgeInsets.symmetric(horizontal: 15.0),
+                  child: Column(children: playlistRows),
+                );
+              },
             ),
             SizedBox(height: 15.0),
             // TEXT FOR RECOMMENDED ITEMS

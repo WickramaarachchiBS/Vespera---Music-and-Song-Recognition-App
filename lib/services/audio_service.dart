@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:vespera/models/song.dart';
@@ -199,5 +198,5 @@ class AudioService extends ChangeNotifier {
     );
   }
 
-  // Optionally add next/prev using _currentSongs and _currentIndex
+// Optionally add next/prev using _currentSongs and _currentIndex
 }
