@@ -26,10 +26,7 @@ class PlaylistService {
   Stream<QuerySnapshot> getUserPlaylists() {
     if (_userId == null) throw Exception('User not authenticated');
 
-    return _firestore
-        .collection('playlists')
-        .where('userId', isEqualTo: _userId)
-        .snapshots();
+    return _firestore.collection('playlists').where('userId', isEqualTo: _userId).snapshots();
   }
 
   // Get playlists for the current user (typed)
@@ -70,11 +67,7 @@ class PlaylistService {
   // Add a song using the model
   Future<void> addSongToPlaylistModel(String playlistId, Song song) async {
     if (_userId == null) throw Exception('User not authenticated');
-    await _firestore
-        .collection('playlists')
-        .doc(playlistId)
-        .collection('songs')
-        .add(song.toMap());
+    await _firestore.collection('playlists').doc(playlistId).collection('songs').add(song.toMap());
   }
 
   // Remove a song from a playlist
@@ -87,5 +80,12 @@ class PlaylistService {
         .collection('songs')
         .doc(songId)
         .delete();
+  }
+
+  // Get the count of songs in a playlist
+  Future<int> getPlaylistSongCount(String playlistId) async {
+    final snapshot =
+        await _firestore.collection('playlists').doc(playlistId).collection('songs').get();
+    return snapshot.docs.length;
   }
 }

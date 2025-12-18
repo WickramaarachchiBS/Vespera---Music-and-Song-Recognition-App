@@ -76,7 +76,8 @@ class _WhisperScreenState extends State<WhisperScreen> {
                         ),
                       ),
                     ),
-                    // Add your bottom sheet content here
+
+                    // Bottom sheet content (Discovered Songs)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Column(

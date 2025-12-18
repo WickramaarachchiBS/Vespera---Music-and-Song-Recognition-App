@@ -184,7 +184,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         style: ListTileStyle.drawer,
                         leading: ClipRRect(
                           borderRadius: BorderRadius.circular(4.0),
-                          child: Image.asset(
+                          child: Image.network(
                             imageURL,
                             width: 50,
                             height: 50,
@@ -206,10 +206,21 @@ class _LibraryScreenState extends State<LibraryScreen> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        // TODO: Add number of songs in the playlist
-                        subtitle: Text(
-                          'No. of Songs',
-                          style: TextStyle(color: AppColors.textMuted),
+                        subtitle: FutureBuilder<int>(
+                          future: _playlistService.getPlaylistSongCount(playlistId),
+                          builder: (context, songSnapshot) {
+                            if (songSnapshot.connectionState == ConnectionState.waiting) {
+                              return Text(
+                                'Loading...',
+                                style: TextStyle(color: AppColors.textMuted),
+                              );
+                            }
+                            final songCount = songSnapshot.data ?? 0;
+                            return Text(
+                              '$songCount ${songCount == 1 ? 'song' : 'songs'}',
+                              style: TextStyle(color: AppColors.textMuted),
+                            );
+                          },
                         ),
                         onTap: () {
                           print('\x1B[32mPlaylist tapped: $name\x1B[0m');
