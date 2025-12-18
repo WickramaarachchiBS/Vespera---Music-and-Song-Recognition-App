@@ -39,6 +39,9 @@ dependencies:
   cloud_firestore: ^6.0.3
   provider: ^6.1.5+1
   just_audio: ^0.10.5
+  # Added for recording and file storage
+  record: ^6.1.2
+  path_provider: ^2.1.4
 
 dev_dependencies:
   flutter_test:
