@@ -203,7 +203,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                       ),
                     ],
                   ),
-                  onTap: () {
+                  onTap: () async {
                     if (song.audioUrl.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Audio URL missing for this song')),

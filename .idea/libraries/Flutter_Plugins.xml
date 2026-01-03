@@ -18,6 +18,11 @@
       <root url="file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/record_web-1.2.2" />
       <root url="file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/record_linux-1.2.1" />
       <root url="file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/record-6.1.2" />
+      <root url="file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/sqflite-2.4.2" />
+      <root url="file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/audio_service-0.18.18" />
+      <root url="file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/sqflite_android-2.4.2+2" />
+      <root url="file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/audio_service_web-0.1.4" />
+      <root url="file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/sqflite_darwin-2.4.2" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
