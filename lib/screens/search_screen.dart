@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
@@ -188,7 +187,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         : ListView.separated(
                           itemCount: _searchResults.length,
                           separatorBuilder:
-                              (_, __) => Divider(
+                              (_, _) => Divider(
                                 color: AppColors.textPrimary.withOpacity(0.08),
                                 height: 1,
                               ),
@@ -196,8 +195,8 @@ class _SearchScreenState extends State<SearchScreen> {
                             final song = _searchResults[index];
                             return ListTile(
                               leading:
-                                  song.imageUrl != null && song.imageUrl!.isNotEmpty
-                                      ? CircleAvatar(backgroundImage: NetworkImage(song.imageUrl!))
+                                  song.imageUrl.isNotEmpty
+                                      ? CircleAvatar(backgroundImage: NetworkImage(song.imageUrl))
                                       : const CircleAvatar(child: Icon(Icons.music_note)),
                               title: Text(
                                 song.title,

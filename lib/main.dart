@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple)),
       // home: const AuthWrapper(),
-      home: const SignUpScreen(),
+      home: const AuthWrapper(),
       routes: {
         '/welcome': (context) => const WelcomeScreen(),
         '/signUp': (context) => const SignUpScreen(),
