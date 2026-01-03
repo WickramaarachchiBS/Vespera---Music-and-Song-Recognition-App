@@ -31,7 +31,8 @@ class MyApp extends StatelessWidget {
       title: 'Vespera',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple)),
-      home: const AuthWrapper(),
+      // home: const AuthWrapper(),
+      home: const SignUpScreen(),
       routes: {
         '/welcome': (context) => const WelcomeScreen(),
         '/signUp': (context) => const SignUpScreen(),
