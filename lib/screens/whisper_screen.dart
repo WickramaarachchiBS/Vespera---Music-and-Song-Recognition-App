@@ -1,9 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:record/record.dart';
 import 'package:vespera/colors.dart';
+import 'package:vespera/services/whisper_services.dart';
 
 class WhisperScreen extends StatefulWidget {
   const WhisperScreen({super.key});
@@ -15,80 +12,67 @@ class WhisperScreen extends StatefulWidget {
 class _WhisperScreenState extends State<WhisperScreen> {
   final DraggableScrollableController _draggableController = DraggableScrollableController();
 
-  // Use AudioRecorder from record v6
-  final AudioRecorder _recorder = AudioRecorder();
+  final WhisperService _whisperService = WhisperService();
   bool _isRecording = false;
   String? _lastSavedPath;
+
+  // TODO: Replace with your actual Python server endpoint.
+  // Example: http://10.0.2.2:8000/identify for Android emulator talking to your PC.
+  final Uri _identifyEndpoint = Uri.parse('http://10.0.2.2:8000/identify');
 
   @override
   void dispose() {
     _draggableController.dispose();
+    _whisperService.dispose();
     super.dispose();
   }
 
   Future<void> _startTenSecondRecording() async {
     if (_isRecording) return;
 
-    final hasPermission = await _recorder.hasPermission();
-    if (!hasPermission) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Microphone permission is required to record audio.')),
-        );
-      }
+    setState(() => _isRecording = true);
+    final result = await _whisperService.startTenSecondRecording();
+    if (!mounted) return;
+
+    setState(() {
+      _isRecording = false;
+      _lastSavedPath = result.savedPath;
+    });
+
+    if (result.failure == WhisperRecordingFailure.permissionDenied) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Microphone permission is required to record audio.')));
       return;
     }
 
-    // Choose a discoverable directory
-    final String sep = Platform.pathSeparator;
-    Directory baseDir;
-    if (Platform.isAndroid) {
-      // Try public Music directory
-      final externalDirs = await getExternalStorageDirectories(type: StorageDirectory.music);
-      baseDir =
-          (externalDirs != null && externalDirs.isNotEmpty)
-              ? externalDirs.first
-              : await getApplicationDocumentsDirectory();
-    } else {
-      // On iOS, Documents is visible in the Files app under the app sandbox
-      baseDir = await getApplicationDocumentsDirectory();
+    if (result.failure == WhisperRecordingFailure.failed) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Recording failed.')));
+      return;
     }
-    final recordingsDir = Directory('${baseDir.path}${sep}Vespera${sep}recordings');
-    if (!await recordingsDir.exists()) {
-      await recordingsDir.create(recursive: true);
-    }
-    final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
-    final outputPath = '${recordingsDir.path}${sep}whisper_$timestamp.m4a';
 
-    try {
-      setState(() => _isRecording = true);
+    if (_lastSavedPath != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Saved recording to: $_lastSavedPath')));
 
-      // Configure and start recording
-      await _recorder.start(
-        const RecordConfig(encoder: AudioEncoder.aacLc, bitRate: 128000, sampleRate: 44100),
-        path: outputPath,
+      final identify = await _whisperService.identifySongFromFile(
+        filePath: _lastSavedPath!,
+        endpoint: _identifyEndpoint,
+        fileField: 'file',
       );
+      if (!mounted) return;
 
-      await Future.delayed(const Duration(seconds: 10));
-
-      final path = await _recorder.stop();
-      setState(() {
-        _isRecording = false;
-        _lastSavedPath = path ?? outputPath;
-      });
-
-      if (mounted && _lastSavedPath != null) {
-        print('Recording Saaved to: $_lastSavedPath');
+      if (!identify.ok) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Saved recording to: $_lastSavedPath')));
+        ).showSnackBar(SnackBar(content: Text(identify.error ?? 'Song identification failed.')));
+        return;
       }
-    } catch (e) {
-      setState(() => _isRecording = false);
-      print('Recording Failed');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Recording failed: $e')));
-      }
+
+      final title = (identify.title?.trim().isNotEmpty ?? false) ? identify.title!.trim() : 'Unknown title';
+      final artist = (identify.artist?.trim().isNotEmpty ?? false) ? identify.artist!.trim() : 'Unknown artist';
+      final conf = identify.confidence;
+      final confText = conf == null ? '' : ' (${(conf * 100).toStringAsFixed(0)}%)';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Identified: $title — $artist$confText')));
     }
   }
 
@@ -103,11 +87,7 @@ class _WhisperScreenState extends State<WhisperScreen> {
             children: [
               Text(
                 _isRecording ? 'Listening… 10s' : 'Tap to Listen',
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(color: AppColors.textPrimary, fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 50),
               Container(
@@ -118,11 +98,7 @@ class _WhisperScreenState extends State<WhisperScreen> {
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        Image(
-                          image: const AssetImage('assets/whisper4.png'),
-                          height: 180,
-                          width: 180,
-                        ),
+                        Image(image: const AssetImage('assets/whisper4.png'), height: 180, width: 180),
                         if (_isRecording)
                           Container(
                             height: 180,
@@ -211,15 +187,9 @@ class _WhisperScreenState extends State<WhisperScreen> {
                                 ),
                                 title: Text(
                                   'Song Title ${index + 1}',
-                                  style: TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                  style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
                                 ),
-                                subtitle: Text(
-                                  'Artist Name',
-                                  style: TextStyle(color: AppColors.textSecondary),
-                                ),
+                                subtitle: Text('Artist Name', style: TextStyle(color: AppColors.textSecondary)),
                                 trailing: Icon(Icons.more_vert, color: AppColors.textSecondary),
                               );
                             }),
