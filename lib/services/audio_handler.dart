@@ -1,8 +1,16 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:vespera/models/song.dart';
 
 class MyAudioHandler extends BaseAudioHandler {
   final AudioPlayer _player = AudioPlayer();
+  List<Song> _playlist = [];
+  int _currentIndex = 0;
+  
+  void setPlaylist(List<Song> songs, int startIndex) {
+    _playlist = songs;
+    _currentIndex = startIndex;
+  }
 
   MyAudioHandler() {
     // Listen to player state and update notification
@@ -97,13 +105,27 @@ class MyAudioHandler extends BaseAudioHandler {
 
   @override
   Future<void> skipToNext() async {
-    // You can hook this to your playlist logic
-    print('Skip to next');
+    if (_playlist.isEmpty || _currentIndex + 1 >= _playlist.length) return;
+    _currentIndex++;
+    final next = _playlist[_currentIndex];
+    await playFromUrl(
+      next.audioUrl,
+      title: next.title,
+      artist: next.artist,
+      artUri: next.imageUrl.isNotEmpty ? next.imageUrl : null,
+    );
   }
 
   @override
   Future<void> skipToPrevious() async {
-    // You can hook this to your playlist logic
-    print('Skip to previous');
+    if (_playlist.isEmpty || _currentIndex - 1 < 0) return;
+    _currentIndex--;
+    final prev = _playlist[_currentIndex];
+    await playFromUrl(
+      prev.audioUrl,
+      title: prev.title,
+      artist: prev.artist,
+      artUri: prev.imageUrl.isNotEmpty ? prev.imageUrl : null,
+    );
   }
 }
