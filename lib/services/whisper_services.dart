@@ -81,7 +81,10 @@ class WhisperService {
         path: outputPath,
       );
 
-      await Future.delayed(const Duration(seconds: 10));
+      // ---------------------
+      // Recording time
+      //---------------------- 
+      await Future.delayed(const Duration(seconds: 15));
 
       final stoppedPath = await _recorder.stop();
       _isRecording = false;
