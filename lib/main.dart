@@ -3,13 +3,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vespera/providers/user_provider.dart';
+import 'package:vespera/providers/whisper_provider.dart';
 import 'package:vespera/screens/common_screen.dart';
 import 'package:vespera/screens/library_screen.dart';
 import 'package:vespera/screens/search_screen.dart';
 import 'package:vespera/screens/signin_screen.dart';
 import 'package:vespera/screens/signup_screen.dart';
 import 'package:vespera/screens/welcome_screen.dart';
-import 'package:vespera/screens/whisper_screen.dart';
+import 'package:vespera/screens/whisper_screen_refactored.dart';
 import 'package:vespera/services/audio_handler.dart';
 import 'package:vespera/services/audio_service.dart';
 import 'package:vespera/services/auth_wrapper.dart';
@@ -34,7 +35,10 @@ void main() async {
 
   runApp(
     MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => UserProvider())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => WhisperProvider()),
+      ],
       child: const MyApp(),
     ),
   );
