@@ -77,7 +77,7 @@ class WhisperService {
       final outputPath = await _buildOutputPath();
 
       await _recorder.start(
-        const RecordConfig(encoder: AudioEncoder.aacLc, bitRate: 128000, sampleRate: 44100),
+        const RecordConfig(encoder: AudioEncoder.wav, sampleRate: 44100), // Try WAV instead
         path: outputPath,
       );
 
@@ -116,6 +116,10 @@ class WhisperService {
     }
 
     try {
+      print('📤 Uploading file: $filePath');
+      print('📍 Endpoint: $endpoint');
+      print('📝 Field name: $fileField');
+      
       final request = http.MultipartRequest('POST', endpoint);
       if (headers != null) {
         request.headers.addAll(headers);
@@ -125,9 +129,14 @@ class WhisperService {
       }
 
       request.files.add(await http.MultipartFile.fromPath(fileField, filePath));
+      
+      print('📦 File size: ${await file.length()} bytes');
 
       final streamedResponse = await request.send().timeout(timeout);
       final response = await http.Response.fromStream(streamedResponse);
+
+      print('📥 Response status: ${response.statusCode}');
+      print('📥 Response body: ${response.body}');
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         return SongIdentificationResult.failure(
@@ -148,6 +157,7 @@ class WhisperService {
 
       return SongIdentificationResult.success(title: title, artist: artist, confidence: confidence, raw: decoded);
     } catch (e) {
+      print('❌ Upload error: $e');
       return SongIdentificationResult.failure('Upload failed: $e');
     }
   }
@@ -172,6 +182,6 @@ class WhisperService {
     }
 
     final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
-    return '${recordingsDir.path}${sep}whisper_$timestamp.m4a';
+    return '${recordingsDir.path}${sep}whisper_$timestamp.wav'; // Change extension
   }
 }

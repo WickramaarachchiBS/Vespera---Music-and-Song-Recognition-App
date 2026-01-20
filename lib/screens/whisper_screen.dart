@@ -24,7 +24,7 @@ class _WhisperScreenState extends State<WhisperScreen> with TickerProviderStateM
   late Animation<double> _pulseAnimation;
   late Animation<double> _scaleAnimation;
 
-  final Uri _identifyEndpoint = Uri.parse('http://10.0.2.2:8000/identify');
+  final Uri _identifyEndpoint = Uri.parse('http://192.168.1.80:8000/api/identify');
 
   @override
   void initState() {
@@ -100,7 +100,7 @@ class _WhisperScreenState extends State<WhisperScreen> with TickerProviderStateM
       final identify = await _whisperService.identifySongFromFile(
         filePath: _lastSavedPath!,
         endpoint: _identifyEndpoint,
-        fileField: 'file',
+        fileField: 'audio_file',
       );
       if (!mounted) return;
 
