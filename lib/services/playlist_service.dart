@@ -47,6 +47,11 @@ class PlaylistService {
     await _firestore.collection('playlists').doc(playlistId).delete();
   }
 
+  // Get playlist details
+  Stream<DocumentSnapshot> getPlaylistDetails(String playlistId) {
+    return _firestore.collection('playlists').doc(playlistId).snapshots();
+  }
+
   // Add a song to a playlist
   Future<void> addSongToPlaylist(String playlistId, Map<String, dynamic> songData) async {
     if (_userId == null) throw Exception('User not authenticated');
@@ -87,5 +92,15 @@ class PlaylistService {
     final snapshot =
         await _firestore.collection('playlists').doc(playlistId).collection('songs').get();
     return snapshot.docs.length;
+  }
+
+  // Get the count of songs in a playlist (stream)
+  Stream<int> getPlaylistSongCountStream(String playlistId) {
+    return _firestore
+        .collection('playlists')
+        .doc(playlistId)
+        .collection('songs')
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length);
   }
 }

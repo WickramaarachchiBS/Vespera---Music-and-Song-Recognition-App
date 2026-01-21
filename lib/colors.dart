@@ -7,7 +7,7 @@ class AppColors {
   static const Color lightBlue = Color(0xFF60A5FA); // Light blue for highlights
 
   // Background Colors
-  static const Color backgroundDark = Color(0xFF0A0E1A); // Very dark blue-black
+  static const Color backgroundDark = Color.fromARGB(255, 29, 38, 65); // Very dark blue-black
   static const Color backgroundMedium = Color(0xFF121826); // Dark blue-grey
   static const Color cardBackground = Color(0xFF1A2332); // Card/container background
 
