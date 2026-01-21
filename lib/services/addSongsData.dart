@@ -10,27 +10,31 @@ class AddSongsData {
 
     final sampleSongs = <Map<String, dynamic>>[
       {
-        'album': 'Speak for Yourself',
-        'title': 'Headlock',
-        'artist': 'Imogen Heap.',
+        'album': '',
+        'title': '18 Wannam',
+        'titleLowercase': '18 wannam',
+        'artist': 'Yuki Navaratne, Ravi Jay.',
+        'artistLowercase': 'yuki navaratne ravi jay.',
         'audioUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Headlock%20-%20Imogen%20Heap.mp3?updatedAt=1762086248780',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Yuki%20Navaratne,%20Ravi%20Jay%20-%2018%20Wannam.mp3?updatedAt=1768980911377',
         'imageUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Headlock%20-%20Imogen%20Heap.jpg?updatedAt=1762086265374',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/18%20Wannam%20-%20Yuki%20Nawarathen,%20Ravi%20Jay.jpg',
         'duration': 205,
         'genre': 'Pop',
         'createdAt': FieldValue.serverTimestamp(),
       },
       {
-        'album': 'Xscape',
-        'title': 'Chicago',
-        'artist': 'Michael Jackson',
+        'album': 'Bambara Pahasa',
+        'title': 'Sande Oba',
+        'titleLowercase': 'sande oba',
+        'artist': 'Rookantha Gunathilake',
+        'artistLowercase': 'rookantha gunathilake',
         'audioUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Michael_Jackson%20-%20Chicago.mp3?updatedAt=1762086888663',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Sande_Oba_Aida_Me_Yame_Rookantha_Gunathilaka_Sarigama_lk.mp3?updatedAt=1768980747800',
         'imageUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Chicago%20-%20Michael%20Jackson.jpg?updatedAt=1762086895823',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Sande%20Oba%20-%20Rookantha%20Goonathilake.jpg',
         'duration': 200,
-        'genre': 'Synthwave',
+        'genre': 'Sinhala Pop',
         'createdAt': FieldValue.serverTimestamp(),
       },
     ];

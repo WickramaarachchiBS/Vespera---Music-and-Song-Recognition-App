@@ -25,8 +25,6 @@ class DiscoveredSongsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<WhisperProvider>(context, listen: false);
-
     if (songs.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 60),

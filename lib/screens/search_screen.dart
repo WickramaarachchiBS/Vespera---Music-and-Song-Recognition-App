@@ -115,6 +115,10 @@ class _SearchScreenState extends State<SearchScreen> {
             child: CircleAvatar(backgroundImage: AssetImage('assets/profilePic.jpg')),
           ),
         ),
+        // -----------------------------------------
+        // REMOVE THIS & 'AddSongsData.dart' IMMIDIATELY AFTER DEVELOPMENT
+        // BUTTON TO ADD SAMPLE SONGS TO FIRESTORE
+        // -----------------------------------------
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 8.0),
