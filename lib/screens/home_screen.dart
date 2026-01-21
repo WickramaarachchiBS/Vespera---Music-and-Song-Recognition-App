@@ -5,9 +5,9 @@ import 'package:vespera/components/home_screen_lib_item.dart';
 import 'package:vespera/components/home_screen_rec_item.dart';
 import 'package:vespera/models/playlist.dart';
 import 'package:vespera/providers/user_provider.dart';
+import 'package:vespera/screens/playlist_detail_screen.dart';
 import 'package:vespera/services/auth_service.dart';
 import 'package:vespera/services/playlist_service.dart';
-import 'package:vespera/screens/playlist_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -93,14 +93,14 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: const Icon(Icons.settings, size: 30, color: AppColors.textPrimary),
               color: AppColors.backgroundDark,
               onSelected: (String value) {
-                if (value == 'signout') {
+                if (value == 'signOut') {
                   _handleSignOut();
                 }
               },
               itemBuilder:
                   (BuildContext context) => [
                     const PopupMenuItem<String>(
-                      value: 'signout',
+                      value: 'signOut',
                       child: Row(
                         children: [
                           Icon(Icons.logout, color: AppColors.textPrimary),

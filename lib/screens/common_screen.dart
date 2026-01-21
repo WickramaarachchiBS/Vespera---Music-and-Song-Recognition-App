@@ -3,7 +3,7 @@ import 'package:vespera/elements/mini_music_player.dart';
 import 'package:vespera/screens/home_screen.dart';
 import 'package:vespera/screens/library_screen.dart';
 import 'package:vespera/screens/search_screen.dart';
-import 'package:vespera/screens/whisper_screen.dart';
+import 'package:vespera/screens/whisper_screen_refactored.dart';
 
 class CommonScreen extends StatefulWidget {
   const CommonScreen({super.key});

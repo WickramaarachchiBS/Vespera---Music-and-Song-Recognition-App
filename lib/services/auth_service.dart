@@ -37,14 +37,19 @@ class AuthService {
 
       return userCredential;
     } on FirebaseAuthException catch (e) {
+      // Always log full details for debugging device-specific issues.
+      // ignore: avoid_print
+      print('FirebaseAuth signUp failed: code=${e.code} message=${e.message}');
+
       if (e.code == 'weak-password') {
         throw 'The password provided is too weak.';
       } else if (e.code == 'email-already-in-use') {
         throw 'An account already exists for that email.';
       } else {
-        throw 'An error occurred: ${e.message}';
+        throw 'Auth failed (${e.code}): ${e.message ?? 'Unknown error'}';
       }
     } catch (e) {
+      // ignore: avoid_print
       print('SignUp error: $e');
       throw 'An unexpected error occurred: $e';
     }
@@ -59,22 +64,26 @@ class AuthService {
       );
       return userCredential;
     } on FirebaseAuthException catch (e) {
+      // ignore: avoid_print
+      print('FirebaseAuth signIn failed: code=${e.code} message=${e.message}');
+
       if (e.code == 'user-not-found') {
         throw 'No user found for that email.';
       } else if (e.code == 'wrong-password') {
         throw 'Wrong password provided.';
       } else {
-        throw 'An error occurred: ${e.message}';
+        throw 'Auth failed (${e.code}): ${e.message ?? 'Unknown error'}';
       }
     } catch (e) {
-      throw 'An unexpected error occurred.';
+      // ignore: avoid_print
+      print('SignIn error: $e');
+      throw 'An unexpected error occurred: $e';
     }
   }
 
   // Sign out
   Future<void> signOut() async {
     await _auth.signOut();
-    
   }
 
   // EXTRA FOR LATER USE ----------------------------------------------------------------

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
+import 'package:vespera/constants.dart';
 import 'package:vespera/screens/signin_screen.dart';
 import 'package:vespera/services/auth_service.dart';
 import 'package:provider/provider.dart';
@@ -89,7 +90,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
             key: _formKey,
             child: Column(
               children: [
-                // ADD APP IMAGE HERE
+                //----------
+                // APP LOGO
+                //----------
                 ClipOval(
                   child: Image.asset(
                     'assets/app_icon.jpg',
@@ -98,7 +101,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     fit: BoxFit.fill,
                   ),
                 ),
-                // TITLE TEXT
+                //-----------
+                // PAGE TITLE
+                //-----------
                 Text(
                   'Sign up to',
                   style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
@@ -127,24 +132,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   controller: _nameController,
                   keyboardType: TextInputType.emailAddress,
                   style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: 'Enter your username',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    filled: true,
-                    fillColor: Color(0xFF282828),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(color: Colors.grey),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(color: Colors.grey),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(color: Color.fromARGB(255, 1, 149, 247)),
-                    ),
-                  ),
+                  decoration: kInputDecoration.copyWith(hintText: 'Enter your username'),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your username';
@@ -172,24 +160,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: 'name@domain.com',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    filled: true,
-                    fillColor: Color(0xFF282828),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(color: Colors.grey),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(color: Colors.grey),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(color: Color.fromARGB(255, 1, 149, 247)),
-                    ),
-                  ),
+                  decoration: kInputDecoration.copyWith(hintText: 'name@domain.com'),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
@@ -220,23 +191,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
+                  decoration: kInputDecoration.copyWith(
                     hintText: 'Enter your password',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    filled: true,
-                    fillColor: Color(0xFF282828),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(color: Colors.grey),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(color: Colors.grey),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(color: Color.fromARGB(255, 1, 149, 247)),
-                    ),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword ? Icons.visibility_off : Icons.visibility,
