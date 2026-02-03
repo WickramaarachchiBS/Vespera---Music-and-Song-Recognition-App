@@ -83,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             margin: EdgeInsets.only(right: 8.0),
             child: PopupMenuButton<String>(
-              icon: const Icon(Icons.settings, size: 30, color: AppColors.textPrimary),
+              icon: const Icon(Icons.more_vert_rounded, size: 25, color: AppColors.textMuted),
               color: AppColors.backgroundDark,
               onSelected: (String value) {
                 if (value == 'signOut') {
