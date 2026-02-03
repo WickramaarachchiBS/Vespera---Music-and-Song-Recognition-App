@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
 import 'package:vespera/models/song.dart';
 import 'package:vespera/screens/common_screen.dart';
-import 'package:vespera/screens/search_screen.dart';
 import 'package:vespera/services/audio_service.dart';
 import 'package:vespera/services/playlist_service.dart';
 
