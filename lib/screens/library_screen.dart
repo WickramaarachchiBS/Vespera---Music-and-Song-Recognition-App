@@ -174,129 +174,177 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     var playlistData = playlist.data() as Map<String, dynamic>;
                     String playlistId = playlist.id;
                     String name = playlistData['name'] ?? 'Untitled';
-                    String imageURL = playlistData['imageURL'] ?? '';
+                    String imageURL = playlistData['imageURL'] ?? 'err';
 
-                    return Card(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
-                      color: AppColors.textMuted.withOpacity(0.2),
-                      margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
-                      child: ListTile(
-                        style: ListTileStyle.drawer,
-                        leading: ClipRRect(
-                          borderRadius: BorderRadius.circular(4.0),
-                          child: Image.network(
-                            imageURL,
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                width: 50,
-                                height: 50,
-                                color: AppColors.textMuted.withOpacity(0.3),
-                                child: Icon(Icons.music_note, color: AppColors.textMuted),
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Colors.white.withOpacity(0.08), Colors.white.withOpacity(0.05)],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+                      ),
+                      child: Dismissible(
+                        key: Key('playlist_$playlistId'),
+                        direction: DismissDirection.endToStart,
+                        confirmDismiss: (direction) async {
+                          return await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) {
+                              return AlertDialog(
+                                backgroundColor: AppColors.backgroundDark,
+                                title: Text(
+                                  'Delete playlist',
+                                  style: TextStyle(color: AppColors.textPrimary),
+                                ),
+                                content: Text(
+                                  'Are you sure you want to delete "$name"? This cannot be undone.',
+                                  style: TextStyle(color: AppColors.textMuted),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(ctx).pop(false),
+                                    child: Text(
+                                      'Cancel',
+                                      style: TextStyle(color: AppColors.textPrimary),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.of(ctx).pop(true),
+                                    child: Text(
+                                      'Delete',
+                                      style: TextStyle(color: Colors.redAccent),
+                                    ),
+                                  ),
+                                ],
                               );
                             },
+                          ) ?? false;
+                        },
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(12),
                           ),
+                          child: const Icon(Icons.delete, color: Colors.white, size: 28),
                         ),
-                        title: Text(
-                          name,
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        subtitle: FutureBuilder<int>(
-                          future: _playlistService.getPlaylistSongCount(playlistId),
-                          builder: (context, songSnapshot) {
-                            if (songSnapshot.connectionState == ConnectionState.waiting) {
-                              return Text(
-                                'Loading...',
-                                style: TextStyle(color: AppColors.textMuted),
+                        onDismissed: (direction) async {
+                          try {
+                            await _playlistService.deletePlaylist(playlistId);
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Deleted "$name"'),
+                                  backgroundColor: Colors.green,
+                                ),
                               );
                             }
-                            final songCount = songSnapshot.data ?? 0;
-                            return Text(
-                              '$songCount ${songCount == 1 ? 'song' : 'songs'}',
-                              style: TextStyle(color: AppColors.textMuted),
-                            );
-                          },
-                        ),
-                        onTap: () {
-                          print('\x1B[32mPlaylist tapped: $name\x1B[0m');
-                          Navigator.of(context, rootNavigator: false).push(
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => PlaylistDetailScreen(
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error deleting playlist: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () {
+                              print('\x1B[32mPlaylist tapped: $name\x1B[0m');
+                              Navigator.of(context, rootNavigator: false).push(
+                                MaterialPageRoute(
+                                  builder: (context) => PlaylistDetailScreen(
                                     playlistId: playlistId,
                                     playlistName: name,
                                   ),
-                            ),
-                          );
-                        },
-                        // Delete playlist button
-                        trailing: IconButton(
-                          icon: Icon(Icons.delete_outline, color: AppColors.textPrimary),
-                          tooltip: 'Delete playlist',
-                          onPressed: () async {
-                            final confirmed =
-                                await showDialog<bool>(
-                                  context: context,
-                                  builder: (ctx) {
-                                    return AlertDialog(
-                                      backgroundColor: AppColors.backgroundDark,
-                                      title: Text(
-                                        'Delete playlist',
-                                        style: TextStyle(color: AppColors.textPrimary),
-                                      ),
-                                      content: Text(
-                                        'Are you sure you want to delete "$name"? This cannot be undone.',
-                                        style: TextStyle(color: AppColors.textMuted),
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.of(ctx).pop(false),
-                                          child: Text(
-                                            'Cancel',
-                                            style: TextStyle(color: AppColors.textPrimary),
+                                ),
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Row(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                    child: imageURL.isEmpty || imageURL == 'err'
+                                        ? Image.asset(
+                                            'assets/errorLoading.jpg',
+                                            width: 60,
+                                            height: 60,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Image.network(
+                                            imageURL,
+                                            width: 60,
+                                            height: 60,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return Image.asset(
+                                                'assets/errorLoading.jpg',
+                                                width: 60,
+                                                height: 60,
+                                                fit: BoxFit.cover,
+                                              );
+                                            },
+                                          ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          name,
+                                          style: TextStyle(
+                                            color: AppColors.textPrimary,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 16,
                                           ),
                                         ),
-                                        TextButton(
-                                          onPressed: () => Navigator.of(ctx).pop(true),
-                                          child: Text(
-                                            'Delete',
-                                            style: TextStyle(color: Colors.redAccent),
-                                          ),
+                                        const SizedBox(height: 4),
+                                        StreamBuilder<int>(
+                                          stream: _playlistService.getPlaylistSongCountStream(playlistId),
+                                          builder: (context, songSnapshot) {
+                                            if (songSnapshot.connectionState == ConnectionState.waiting) {
+                                              return Text(
+                                                'Loading...',
+                                                style: TextStyle(
+                                                  color: AppColors.textMuted,
+                                                  fontSize: 13,
+                                                ),
+                                              );
+                                            }
+                                            final songCount = songSnapshot.data ?? 0;
+                                            return Text(
+                                              '$songCount ${songCount == 1 ? 'song' : 'songs'}',
+                                              style: TextStyle(
+                                                color: AppColors.textMuted,
+                                                fontSize: 13,
+                                              ),
+                                            );
+                                          },
                                         ),
                                       ],
-                                    );
-                                  },
-                                ) ??
-                                false;
-
-                            if (confirmed) {
-                              try {
-                                await _playlistService.deletePlaylist(playlistId);
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Deleted "$name"'),
-                                      backgroundColor: Colors.green,
                                     ),
-                                  );
-                                }
-                              } catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Error deleting playlist: $e'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                              }
-                            }
-                          },
+                                  ),
+                                  Icon(
+                                    Icons.chevron_right,
+                                    color: AppColors.textMuted.withOpacity(0.5),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     );

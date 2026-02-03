@@ -6,20 +6,26 @@ import 'package:vespera/screens/search_screen.dart';
 import 'package:vespera/screens/whisper_screen_refactored.dart';
 
 class CommonScreen extends StatefulWidget {
-  const CommonScreen({super.key});
+  final int? initialIndex;
+  
+  const CommonScreen({super.key, this.initialIndex});
 
   @override
   State<CommonScreen> createState() => _CommonScreenState();
 }
 
 class _CommonScreenState extends State<CommonScreen> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
 
   // Navigator keys for each tab (except Whisper which opens separately)
   final GlobalKey<NavigatorState> _homeKey = GlobalKey<NavigatorState>();
   final GlobalKey<NavigatorState> _searchKey = GlobalKey<NavigatorState>();
   final GlobalKey<NavigatorState> _libraryKey = GlobalKey<NavigatorState>();
-
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex ?? 0;
+  }
   Future<bool> _onWillPop() async {
     final keys = [_homeKey, _searchKey, _libraryKey];
     final currentKey = keys[_selectedIndex];
@@ -36,6 +42,16 @@ class _CommonScreenState extends State<CommonScreen> {
       Navigator.of(context).push(MaterialPageRoute(builder: (_) => const WhisperScreen()));
       return;
     }
+    
+    // If tapping the same tab, pop to root
+    if (index == _selectedIndex) {
+      final keys = [_homeKey, _searchKey, _libraryKey];
+      final navState = keys[index].currentState;
+      if (navState?.canPop() ?? false) {
+        navState!.popUntil((route) => route.isFirst);
+      }
+    }
+    
     setState(() {
       _selectedIndex = index;
     });

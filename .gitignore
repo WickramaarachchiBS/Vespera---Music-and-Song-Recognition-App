@@ -8,6 +8,24 @@
 .history
 .idea
 
+# VS Code
+.vscode/
+
+# IntelliJ / Android Studio
+*.iml
+*.ipr
+*.iws
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
 
 # Flutter repo-specific
 /bin/cache/
@@ -40,15 +58,23 @@ analysis_benchmark.json
 .packages
 .pub-preload-cache/
 .pub/
+.pub-cache/
 build/
 flutter_*.png
 linked_*.ds
 unlinked.ds
 unlinked_spec.ds
 
+# FVM (Flutter Version Management)
+.fvm/
+
 # Android related
 **/android/**/gradle-wrapper.jar
 .gradle/
+**/android/.cxx/
+**/android/**/.cxx/
+**/android/.externalNativeBuild/
+**/android/**/.externalNativeBuild/
 **/android/captures/
 **/android/gradlew
 **/android/gradlew.bat
@@ -56,6 +82,11 @@ unlinked_spec.ds
 **/android/**/GeneratedPluginRegistrant.java
 **/android/key.properties
 *.jks
+*.keystore
+
+# Local env files (often contain secrets)
+.env
+.env.*
 
 # iOS/XCode related
 **/ios/**/*.mode1v3

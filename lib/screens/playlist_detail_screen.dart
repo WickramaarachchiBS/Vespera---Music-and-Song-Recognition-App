@@ -1,6 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
 import 'package:vespera/models/song.dart';
+import 'package:vespera/screens/common_screen.dart';
+import 'package:vespera/screens/search_screen.dart';
 import 'package:vespera/services/audio_service.dart';
 import 'package:vespera/services/playlist_service.dart';
 
@@ -51,176 +54,270 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
-      appBar: AppBar(
-        backgroundColor: AppColors.backgroundDark,
-        title: Text(
-          widget.playlistName,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          // Add sample song button
-          IconButton(
-            icon: const Icon(Icons.add, color: AppColors.textPrimary),
-            onPressed: () {},
-            tooltip: 'Add Sample Song',
-          ),
-        ],
-      ),
-      body: StreamBuilder<List<Song>>(
-        stream: _getPlaylistSongs(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Text(
-                  'Error loading songs: ${snapshot.error}',
-                  style: const TextStyle(color: AppColors.textMuted),
-                  textAlign: TextAlign.center,
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: _playlistService.getPlaylistDetails(widget.playlistId),
+        builder: (context, playlistSnapshot) {
+          final playlistData = playlistSnapshot.data?.data() as Map<String, dynamic>?;
+          final imageUrl = playlistData?['imageURL'] ?? '';
+
+          return CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 300,
+                floating: false,
+                pinned: true,
+                backgroundColor: AppColors.backgroundDark,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+                  onPressed: () => Navigator.pop(context),
                 ),
-              ),
-            );
-          }
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: Colors.green));
-          }
-
-          final songs = snapshot.data ?? const <Song>[];
-          if (songs.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(40.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.music_note_outlined,
-                      size: 80,
-                      color: AppColors.textMuted.withOpacity(0.5),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'No songs in this playlist',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Add songs to start listening',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.textMuted, fontSize: 14),
-                    ),
-                  ],
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.add, color: AppColors.textPrimary),
+                    onPressed: () {
+                      // Navigate back to CommonScreen with search tab selected (index 1)
+                      Navigator.of(context, rootNavigator: true).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => const CommonScreen(initialIndex: 1),
+                        ),
+                      );
+                    },
+                    tooltip: 'Add Song',
+                  ),
+                ],
+                centerTitle: true,
+                title: Text(
+                  widget.playlistName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-              ),
-            );
-          }
-
-          return ListView.builder(
-            itemCount: songs.length,
-            itemBuilder: (context, index) {
-              final song = songs[index];
-
-              return Card(
-                color: AppColors.backgroundMedium,
-                margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                child: ListTile(
-                  leading: SizedBox(
-                    width: 50.0,
-                    height: 50.0,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(4.0),
-                      child: Image.network(
-                        song.imageUrl,
-                        width: 50,
-                        height: 50,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container();
-                        },
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          AppColors.backgroundDark,
+                          AppColors.backgroundDark.withOpacity(0.8),
+                        ],
                       ),
                     ),
-                  ),
-                  title: Text(
-                    song.title,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  subtitle: Text(
-                    song.artist + (song.album.isNotEmpty ? ' • ${song.album}' : ''),
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        song.duration,
-                        style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
-                      ),
-                      PopupMenuButton<String>(
-                        icon: const Icon(Icons.remove_circle_outline, color: AppColors.textMuted),
-                        color: AppColors.backgroundDark,
-                        onSelected: (value) {
-                          if (value == 'remove') {
-                            _deleteSong(song.id, song.title);
-                          }
-                        },
-                        itemBuilder:
-                            (context) => [
-                              const PopupMenuItem(
-                                value: 'remove',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.remove_circle, color: Colors.red),
-                                    SizedBox(width: 10),
-                                    Text(
-                                      'Remove from Playlist',
-                                      style: TextStyle(color: AppColors.textPrimary),
-                                    ),
-                                  ],
-                                ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 60),
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 40),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.5),
+                                blurRadius: 20,
+                                spreadRadius: 5,
                               ),
                             ],
-                      ),
-                    ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: imageUrl.isEmpty || imageUrl == 'err'
+                                ? Image.asset(
+                                    'assets/errorLoading.jpg',
+                                    width: 200,
+                                    height: 200,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Image.network(
+                                    imageUrl,
+                                    width: 200,
+                                    height: 200,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Image.asset(
+                                        'assets/errorLoading.jpg',
+                                        width: 200,
+                                        height: 200,
+                                        fit: BoxFit.cover,
+                                      );
+                                    },
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  onTap: () async {
-                    if (song.audioUrl.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Audio URL missing for this song')),
-                      );
-                      return;
-                    }
-                    print('\x1B[32m${song.title}\x1B[0m');
-                    print('\x1B[32m${song.artist}\x1B[0m');
-                    print('\x1B[32m${song.audioUrl}\x1B[0m');
-                    _playPlaylist(songs, index);
-                  },
                 ),
-              );
-            },
-          );
-        },
-      ),
+              ),
+              SliverToBoxAdapter(
+                child: StreamBuilder<List<Song>>(
+                  stream: _getPlaylistSongs(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Text(
+                            'Error loading songs: ${snapshot.error}',
+                            style: const TextStyle(color: AppColors.textMuted),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      );
+                    }
+
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(40.0),
+                          child: CircularProgressIndicator(color: Colors.green),
+                        ),
+                      );
+                    }
+
+                    final songs = snapshot.data ?? const <Song>[];
+                    if (songs.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(40.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.music_note_outlined,
+                                size: 80,
+                                color: AppColors.textMuted.withOpacity(0.5),
+                              ),
+                              const SizedBox(height: 20),
+                              const Text(
+                                'No songs in this playlist',
+                                style: TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              const Text(
+                                'Add songs to start listening',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: AppColors.textMuted, fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: songs.length,
+                      itemBuilder: (context, index) {
+                        final song = songs[index];
+
+                        return Card(
+                          color: AppColors.backgroundMedium,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                          clipBehavior: Clip.antiAlias,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () async {
+                              if (song.audioUrl.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Audio URL missing for this song')),
+                                );
+                                return;
+                              }
+                              print('\x1B[32m${song.title}\x1B[0m');
+                              print('\x1B[32m${song.artist}\x1B[0m');
+                              print('\x1B[32m${song.audioUrl}\x1B[0m');
+                              _playPlaylist(songs, index);
+                            },
+                            child: ListTile(
+                              leading: SizedBox(
+                                width: 50.0,
+                                height: 50.0,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(4.0),
+                                  child: Image.network(
+                                    song.imageUrl,
+                                    width: 50,
+                                    height: 50,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container();
+                                    },
+                                  ),
+                                ),
+                              ),
+                              title: Text(
+                                song.title,
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              subtitle: Text(
+                                song.artist + (song.album.isNotEmpty ? ' • ${song.album}' : ''),
+                                style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    song.duration,
+                                    style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                                  ),
+                                  PopupMenuButton<String>(
+                                    icon: const Icon(Icons.remove_circle_outline, color: AppColors.textMuted),
+                                    color: AppColors.backgroundDark,
+                                    onSelected: (value) {
+                                      if (value == 'remove') {
+                                        _deleteSong(song.id, song.title);
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
+                                      const PopupMenuItem(
+                                        value: 'remove',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.remove_circle, color: Colors.red),
+                                            SizedBox(width: 10),
+                                            Text(
+                                              'Remove from Playlist',
+                                              style: TextStyle(color: AppColors.textPrimary),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    ),
     );
   }
 }

@@ -86,6 +86,9 @@ class AudioService extends ChangeNotifier {
       _currentArtist = artist;
       _currentImageUrl = imageUrl;
 
+      // Make UI react immediately (e.g. show mini player) before awaiting async loading.
+      notifyListeners();
+
       // Use audio handler if available (enables background playback + notifications)
       if (_audioHandler != null) {
         await _audioHandler!.playFromUrl(
@@ -137,6 +140,10 @@ class AudioService extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('Error playing audio: $e');
+
+      // If playback failed, reflect that in UI.
+      _isPlaying = false;
+      notifyListeners();
     }
   }
 
