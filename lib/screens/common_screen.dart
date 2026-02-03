@@ -46,7 +46,10 @@ class _CommonScreenState extends State<CommonScreen> {
     // If tapping the same tab, pop to root
     if (index == _selectedIndex) {
       final keys = [_homeKey, _searchKey, _libraryKey];
-      keys[index].currentState?.popUntil((route) => route.isFirst);
+      final navState = keys[index].currentState;
+      if (navState?.canPop() ?? false) {
+        navState!.popUntil((route) => route.isFirst);
+      }
     }
     
     setState(() {
