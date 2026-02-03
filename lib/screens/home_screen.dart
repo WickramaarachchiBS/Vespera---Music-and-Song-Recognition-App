@@ -79,13 +79,6 @@ class _HomeScreenState extends State<HomeScreen> {
             color: AppColors.textMuted,
           ),
         ),
-        leading: Container(
-          margin: EdgeInsets.only(left: 15.0),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 3.0),
-            child: CircleAvatar(backgroundImage: AssetImage('assets/profilePic.jpg')),
-          ),
-        ),
         actions: [
           Container(
             margin: EdgeInsets.only(right: 8.0),

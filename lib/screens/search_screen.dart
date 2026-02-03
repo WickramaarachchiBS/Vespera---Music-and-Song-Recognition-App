@@ -105,16 +105,10 @@ class _SearchScreenState extends State<SearchScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.backgroundDark,
         title: const Text(
-          'Search',
+          ' Search',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: AppColors.textPrimary),
         ),
-        leading: Container(
-          margin: const EdgeInsets.only(left: 15.0),
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 3.0),
-            child: CircleAvatar(backgroundImage: AssetImage('assets/profilePic.jpg')),
-          ),
-        ),
+        
         // -----------------------------------------
         // REMOVE THIS & 'AddSongsData.dart' IMMIDIATELY AFTER DEVELOPMENT
         // BUTTON TO ADD SAMPLE SONGS TO FIRESTORE

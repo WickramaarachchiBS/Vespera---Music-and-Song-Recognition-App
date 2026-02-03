@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dot_navigation_bar/dot_navigation_bar.dart';
 import 'package:vespera/elements/mini_music_player.dart';
 import 'package:vespera/screens/home_screen.dart';
 import 'package:vespera/screens/library_screen.dart';
@@ -89,20 +90,37 @@ class _CommonScreenState extends State<CommonScreen> {
             const MiniMusicPlayer(),
           ],
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
+        extendBody: true,
+        bottomNavigationBar: DotNavigationBar(
+          margin: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom > 0 ? 0 : 16,
+          ),
           backgroundColor: Colors.black,
-          selectedItemColor: Colors.white,
+          selectedItemColor: Colors.transparent,
           unselectedItemColor: Colors.grey,
-          showUnselectedLabels: true,
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-            BottomNavigationBarItem(icon: Icon(Icons.library_music), label: 'Library'),
-            BottomNavigationBarItem(icon: Icon(Icons.earbuds), label: 'Whisper'),
-          ],
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
+          marginR: const EdgeInsets.only(left: 20, right: 20, bottom: 0),
+          paddingR: const EdgeInsets.only(left: 10, right: 10, top: 6, bottom: 6),
+          curve: Curves.bounceInOut,
+          items: [
+            DotNavigationBarItem(
+              icon: const Icon(Icons.home),
+              selectedColor: Colors.white,
+            ),
+            DotNavigationBarItem(
+              icon: const Icon(Icons.search),
+              selectedColor: Colors.white,
+            ),
+            DotNavigationBarItem(
+              icon: const Icon(Icons.library_music),
+              selectedColor: Colors.white,
+            ),
+            DotNavigationBarItem(
+              icon: const Icon(Icons.earbuds),
+              selectedColor: Colors.white,
+            ),
+          ],
         ),
       ),
     );

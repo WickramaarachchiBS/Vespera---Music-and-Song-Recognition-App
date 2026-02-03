@@ -47,13 +47,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
           'Your Library',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: AppColors.textPrimary),
         ),
-        leading: Container(
-          margin: const EdgeInsets.only(left: 15.0),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 3.0),
-            child: CircleAvatar(backgroundImage: AssetImage('assets/profilePic.jpg')),
-          ),
-        ),
         actions: [
           Row(
             children: [
