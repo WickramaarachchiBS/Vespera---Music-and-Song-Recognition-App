@@ -10,10 +10,10 @@ class AddSongsData {
 
     final sampleSongs = <Map<String, dynamic>>[
       {
-        'album': '',
-        'title': '18 Wannam',
-        'titleLowercase': '18 wannam',
-        'artist': 'Yuki Navaratne, Ravi Jay.',
+        'album': 'METRO BOOMIN PRESENTS SPIDER-MAN: ACROSS THE SPIDER-VERSE',
+        'title': 'Am I Dreaming',
+        'titleLowercase': 'am i dreaming',
+        'artist': 'A$AP Rocky, Metro Boomin, and Roisee',
         'artistLowercase': 'yuki navaratne ravi jay.',
         'audioUrl':
             'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Yuki%20Navaratne,%20Ravi%20Jay%20-%2018%20Wannam.mp3?updatedAt=1768980911377',
