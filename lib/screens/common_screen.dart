@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:dot_navigation_bar/dot_navigation_bar.dart';
+import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:vespera/elements/mini_music_player.dart';
 import 'package:vespera/screens/home_screen.dart';
 import 'package:vespera/screens/library_screen.dart';
@@ -40,7 +40,14 @@ class _CommonScreenState extends State<CommonScreen> {
   void _onItemTapped(int index) {
     if (index == 3) {
       // Open Whisper as separate screen
-      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const WhisperScreen()));
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const WhisperScreen())).then((_) {
+        // Change to Library tab when returning
+        if (mounted) {
+          setState(() {
+            _selectedIndex = 2;
+          });
+        }
+      });
       return;
     }
     
@@ -88,39 +95,67 @@ class _CommonScreenState extends State<CommonScreen> {
               ),
             ),
             const MiniMusicPlayer(),
+            const SizedBox(height: 120),
           ],
         ),
         extendBody: true,
-        bottomNavigationBar: DotNavigationBar(
-          margin: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom > 0 ? 0 : 16,
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: Colors.black,
+            border: Border(
+              top: BorderSide(
+                color: Colors.white.withOpacity(0.1),
+                width: 0.5,
+              ),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.4),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+              ),
+            ],
           ),
-          backgroundColor: Colors.black,
-          selectedItemColor: Colors.transparent,
-          unselectedItemColor: Colors.grey,
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-          marginR: const EdgeInsets.only(left: 20, right: 20, bottom: 0),
-          paddingR: const EdgeInsets.only(left: 10, right: 10, top: 6, bottom: 6),
-          curve: Curves.bounceInOut,
-          items: [
-            DotNavigationBarItem(
-              icon: const Icon(Icons.home),
-              selectedColor: Colors.white,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              child: GNav(
+                rippleColor: Colors.grey[800]!,
+                hoverColor: Colors.grey[900]!,
+                haptic: true,
+                tabBorderRadius: 24,
+                tabActiveBorder: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+                curve: Curves.easeInOut,
+                duration: const Duration(milliseconds: 400),
+                gap: 8,
+                color: Colors.grey[500],
+                activeColor: Colors.white,
+                iconSize: 24,
+                tabBackgroundColor: Colors.white.withOpacity(0.1),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                selectedIndex: _selectedIndex,
+                onTabChange: _onItemTapped,
+                tabs: const [
+                  GButton(
+                    icon: Icons.home_rounded,
+                    text: 'Home',
+                  ),
+                  GButton(
+                    icon: Icons.search_rounded,
+                    text: 'Search',
+                  ),
+                  GButton(
+                    icon: Icons.library_music_rounded,
+                    text: 'Library',
+                  ),
+                  GButton(
+                    icon: Icons.graphic_eq_rounded,
+                    text: 'Whisper',
+                  ),
+                ],
+              ),
             ),
-            DotNavigationBarItem(
-              icon: const Icon(Icons.search),
-              selectedColor: Colors.white,
-            ),
-            DotNavigationBarItem(
-              icon: const Icon(Icons.library_music),
-              selectedColor: Colors.white,
-            ),
-            DotNavigationBarItem(
-              icon: const Icon(Icons.earbuds),
-              selectedColor: Colors.white,
-            ),
-          ],
+          ),
         ),
       ),
     );
