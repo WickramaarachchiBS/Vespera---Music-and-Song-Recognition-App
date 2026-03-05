@@ -1,7 +1,5 @@
 import 'dart:io';
-
 import 'dart:convert';
-
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
@@ -77,7 +75,12 @@ class WhisperService {
       final outputPath = await _buildOutputPath();
 
       await _recorder.start(
-        const RecordConfig(encoder: AudioEncoder.wav, sampleRate: 44100), // Try WAV instead
+        const RecordConfig(
+          encoder: AudioEncoder.wav,
+          sampleRate: 44100,
+          numChannels: 1,      // mono — matches server expectation
+          noiseSuppress: true, // enables Android NoiseSuppressor / iOS equivalent
+        ),
         path: outputPath,
       );
 

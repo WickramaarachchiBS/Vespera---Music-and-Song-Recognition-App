@@ -126,7 +126,7 @@ class _CommonScreenState extends State<CommonScreen> {
                 tabBorderRadius: 24,
                 tabActiveBorder: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
                 curve: Curves.easeInOut,
-                duration: const Duration(milliseconds: 400),
+                duration: const Duration(milliseconds: 300),
                 gap: 8,
                 color: Colors.grey[500],
                 activeColor: Colors.white,

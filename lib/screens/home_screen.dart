@@ -3,11 +3,15 @@ import 'package:provider/provider.dart';
 import 'package:vespera/colors.dart';
 import 'package:vespera/components/home_screen_lib_item.dart';
 import 'package:vespera/components/home_screen_rec_item.dart';
+import 'package:vespera/components/song_recommendation_item.dart';
 import 'package:vespera/models/playlist.dart';
+import 'package:vespera/models/song.dart';
 import 'package:vespera/providers/user_provider.dart';
 import 'package:vespera/screens/playlist_detail_screen.dart';
 import 'package:vespera/services/auth_service.dart';
 import 'package:vespera/services/playlist_service.dart';
+import 'package:vespera/services/recommendation_service.dart';
+import 'package:vespera/services/audio_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,6 +22,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final PlaylistService _playlistService = PlaylistService();
+  final RecommendationService _recommendationService = RecommendationService();
 
   @override
   void initState() {
@@ -44,23 +49,31 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  //sample data - replace with real data from API/database
-  final List<Map<String, String>> recommendations = [
-    {'title': 'Chill Evening', 'image': 'assets/her.jpg'},
-    {'title': 'Workout Mix', 'image': 'assets/newJeans.jpg'},
-    {'title': 'Study Focus', 'image': 'assets/daddyIssues.jpg'},
-    {'title': 'Party Hits', 'image': 'assets/dandelion.jpg'},
-    {'title': 'Morning Boost', 'image': 'assets/her.jpg'},
-    {'title': 'Acoustic Vibes', 'image': 'assets/newJeans.jpg'},
-  ];
-
-  final List<Map<String, String>> recentPlaylists = [
-    {'title': 'My Favorites', 'image': 'assets/newJeans.jpg'},
-    {'title': 'Daily Mix', 'image': 'assets/her.jpg'},
-    {'title': 'Road Trip', 'image': 'assets/dandelion.jpg'},
-    {'title': 'Relaxing Tunes', 'image': 'assets/daddyIssues.jpg'},
-    {'title': 'Top Hits', 'image': 'assets/newJeans.jpg'},
-  ];
+  // Play a song using the audio service
+  void _playSong(Song song, List<Song> playlist) async {
+    try {
+      final audioService = AudioService();
+      final songIndex = playlist.indexWhere((s) => s.id == song.id);
+      if (songIndex != -1) {
+        await audioService.playSongs(playlist: playlist, startIndex: songIndex);
+      } else {
+        // If song not in playlist, play as single song
+        await audioService.playSong(
+          audioUrl: song.audioUrl,
+          title: song.title,
+          artist: song.artist,
+          imageUrl: song.imageUrl,
+        );
+      }
+    } catch (e) {
+      print('Error playing song: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error playing song: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -213,13 +226,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
-            SizedBox(height: 15.0),
-            // TEXT FOR RECOMMENDED ITEMS
+            const SizedBox(height: 15.0),
+            // RECOMMENDED SONGS SECTION
             Container(
               alignment: Alignment.bottomLeft,
-              margin: EdgeInsets.only(left: 18.0),
-              child: Text(
-                'More of what you like',
+              margin: const EdgeInsets.only(left: 18.0),
+              child: const Text(
+                'Recommended for You',
                 style: TextStyle(
                   fontSize: 21.0,
                   fontWeight: FontWeight.bold,
@@ -227,26 +240,62 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            // RECOMMENDATION ITEMS
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children:
-                    recommendations
+            StreamBuilder<List<Song>>(
+              stream: _recommendationService.getRecommendedSongs(limit: 10),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Container(
+                    height: 200,
+                    child: const Center(
+                      child: CircularProgressIndicator(color: AppColors.textPrimary),
+                    ),
+                  );
+                }
+
+                if (snapshot.hasError) {
+                  return Container(
+                    margin: const EdgeInsets.all(15.0),
+                    child: const Text(
+                      'Error loading recommendations',
+                      style: TextStyle(color: AppColors.textMuted),
+                    ),
+                  );
+                }
+
+                final songs = snapshot.data ?? [];
+
+                if (songs.isEmpty) {
+                  return Container(
+                    margin: const EdgeInsets.all(15.0),
+                    child: const Text(
+                      'No recommendations available',
+                      style: TextStyle(color: AppColors.textMuted),
+                    ),
+                  );
+                }
+
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: songs
                         .map(
-                          (item) =>
-                              HomeScreenRecItem(title: item['title']!, imageAsset: item['image']!),
+                          (song) => SongRecommendationItem(
+                            song: song,
+                            onTap: () => _playSong(song, songs),
+                          ),
                         )
                         .toList(),
-              ),
+                  ),
+                );
+              },
             ),
-            SizedBox(height: 10.0),
-            // TEXT FOR RECENT PLAYLIST ITEMS
+            const SizedBox(height: 10.0),
+            // RECOMMENDED PLAYLISTS SECTION
             Container(
               alignment: Alignment.bottomLeft,
-              margin: EdgeInsets.only(left: 18.0),
-              child: Text(
-                'Recent Playlists',
+              margin: const EdgeInsets.only(left: 18.0),
+              child: const Text(
+                'Featured Playlists',
                 style: TextStyle(
                   fontSize: 21.0,
                   fontWeight: FontWeight.bold,
@@ -254,19 +303,70 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            // RECENT PLAYLIST ITEMS
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children:
-                    recentPlaylists
+            StreamBuilder<List<Playlist>>(
+              stream: _recommendationService.getRecommendedPlaylists(limit: 10),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Container(
+                    height: 200,
+                    child: const Center(
+                      child: CircularProgressIndicator(color: AppColors.textPrimary),
+                    ),
+                  );
+                }
+
+                if (snapshot.hasError) {
+                  return Container(
+                    margin: const EdgeInsets.all(15.0),
+                    child: const Text(
+                      'Error loading playlists',
+                      style: TextStyle(color: AppColors.textMuted),
+                    ),
+                  );
+                }
+
+                final playlists = snapshot.data ?? [];
+
+                if (playlists.isEmpty) {
+                  return Container(
+                    margin: const EdgeInsets.all(15.0),
+                    child: const Text(
+                      'No featured playlists available',
+                      style: TextStyle(color: AppColors.textMuted),
+                    ),
+                  );
+                }
+
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: playlists
                         .map(
-                          (item) =>
-                              HomeScreenRecItem(title: item['title']!, imageAsset: item['image']!),
+                          (playlist) => GestureDetector(
+                            onTap: () {
+                              Navigator.of(context, rootNavigator: false).push(
+                                MaterialPageRoute(
+                                  builder: (context) => PlaylistDetailScreen(
+                                    playlistId: playlist.id,
+                                    playlistName: playlist.name,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: HomeScreenRecItem(
+                              title: playlist.name,
+                              imageAsset: playlist.imageUrl.isNotEmpty
+                                  ? playlist.imageUrl
+                                  : 'assets/playlistImages/default.png',
+                            ),
+                          ),
                         )
                         .toList(),
-              ),
+                  ),
+                );
+              },
             ),
+            const SizedBox(height: 80),
           ],
         ),
       ),

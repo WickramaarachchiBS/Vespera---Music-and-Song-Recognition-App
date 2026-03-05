@@ -22,7 +22,9 @@ class WhisperProvider extends ChangeNotifier {
   bool get isListening => _state == ListeningState.listening;
 
   // Configuration
-  static const String identifyEndpoint = 'http://192.168.1.80:8000/api/identify';
+  // static const String identifyEndpoint = 'http://192.168.1.80:8000/api/identify';
+  static const String identifyEndpoint = 'https://vesper-song-recognition-hrd3bsgagre6adc0.centralindia-01.azurewebsites.net/api/identify';
+
 
   WhisperProvider() {
     loadDiscoveredSongs();
