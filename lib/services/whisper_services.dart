@@ -165,6 +165,12 @@ class WhisperService {
     } catch (e) {
       print('❌ Upload error: $e');
       return SongIdentificationResult.failure('Upload failed: $e');
+    } finally {
+      // Delete the local recording after upload (success or failure) to avoid accumulating WAV files
+      try {
+        final f = File(filePath);
+        if (await f.exists()) await f.delete();
+      } catch (_) {}
     }
   }
 
