@@ -60,7 +60,10 @@ class _WhisperScreenState extends State<WhisperScreen> with TickerProviderStateM
   Future<void> _handleRecording() async {
     final provider = Provider.of<WhisperProvider>(context, listen: false);
 
-    if (provider.isListening) return;
+    if (provider.isListening) {
+      provider.cancelRecording();
+      return;
+    }
 
     _rippleController.repeat();
     _glowController.repeat(reverse: true);
@@ -73,6 +76,8 @@ class _WhisperScreenState extends State<WhisperScreen> with TickerProviderStateM
     _rippleController.reset();
     _glowController.stop();
     _glowController.reset();
+
+    if (result.isCancelled) return;
 
     if (result.isSuccess && result.song != null) {
       IdentifiedSongWithPlaylistModal.show(context, song: result.song!, confidence: result.confidence);

@@ -52,6 +52,10 @@ class WhisperProvider extends ChangeNotifier {
       return SongRecognitionResult.error('Microphone permission is required to record audio.');
     }
 
+    if (result.failure == WhisperRecordingFailure.cancelled) {
+      return SongRecognitionResult.cancelled();
+    }
+
     if (result.failure == WhisperRecordingFailure.failed) {
       return SongRecognitionResult.error('Recording failed.');
     }
@@ -145,6 +149,10 @@ class WhisperProvider extends ChangeNotifier {
     await loadDiscoveredSongs();
   }
 
+  void cancelRecording() {
+    _whisperService.cancelRecording();
+  }
+
   @override
   void dispose() {
     _whisperService.dispose();
@@ -182,4 +190,10 @@ class SongRecognitionResult {
   factory SongRecognitionResult.error(String message) {
     return SongRecognitionResult._(errorMessage: message, isSuccess: false, isNotInDatabase: false);
   }
+
+  factory SongRecognitionResult.cancelled() {
+    return const SongRecognitionResult._(isSuccess: false, isNotInDatabase: false);
+  }
+
+  bool get isCancelled => !isSuccess && errorMessage == null && !isNotInDatabase;
 }
