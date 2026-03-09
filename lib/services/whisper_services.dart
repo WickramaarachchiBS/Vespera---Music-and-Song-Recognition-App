@@ -85,7 +85,7 @@ class WhisperService {
       await _recorder.start(
         const RecordConfig(
           encoder: AudioEncoder.wav,
-          sampleRate: 44100,
+          sampleRate: 16000,
           numChannels: 1,      // mono — matches server expectation
           noiseSuppress: true, // enables Android NoiseSuppressor / iOS equivalent
         ),
@@ -218,6 +218,6 @@ class WhisperService {
     }
 
     final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
-    return '${recordingsDir.path}${sep}whisper_$timestamp.wav'; // Change extension
+    return '${recordingsDir.path}${sep}whisper_$timestamp.wav';
   }
 }
