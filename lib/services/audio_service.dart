@@ -49,7 +49,10 @@ class AudioService extends ChangeNotifier {
   List<Song> _currentSongs = const [];
   int _currentIndex = 0;
   bool _playlistMode = false;
-  StreamSubscription<ProcessingState>? _processingStateSub; // pseudo; adjust below
+  StreamSubscription<ProcessingState>? _processingStateSub;
+  StreamSubscription? _durationSub;
+  StreamSubscription? _positionSub;
+  StreamSubscription? _playerStateSub;
 
   // Get current song as Song object
   Song? get currentSong {
@@ -79,6 +82,11 @@ class AudioService extends ChangeNotifier {
     String? artist,
     String? imageUrl,
   }) async {
+    // Cancel any previous stream subscriptions to avoid stale listeners.
+    await _durationSub?.cancel();
+    await _positionSub?.cancel();
+    await _playerStateSub?.cancel();
+
     try {
       // Update current song details
       _currentAudioUrl = audioUrl;
@@ -99,18 +107,18 @@ class AudioService extends ChangeNotifier {
         );
         // Listen to the handler's player instead
         final player = _audioHandler!.player;
-        
-        player.durationStream.listen((duration) {
+
+        _durationSub = player.durationStream.listen((duration) {
           _duration = duration ?? Duration.zero;
           notifyListeners();
         });
 
-        player.positionStream.listen((position) {
+        _positionSub = player.positionStream.listen((position) {
           _position = position;
           notifyListeners();
         });
 
-        player.playerStateStream.listen((state) {
+        _playerStateSub = player.playerStateStream.listen((state) {
           _isPlaying = state.playing;
           notifyListeners();
         });
@@ -118,17 +126,17 @@ class AudioService extends ChangeNotifier {
         // Fallback to direct player (no background support)
         await _audioPlayer.setUrl(audioUrl);
 
-        _audioPlayer.durationStream.listen((duration) {
+        _durationSub = _audioPlayer.durationStream.listen((duration) {
           _duration = duration ?? Duration.zero;
           notifyListeners();
         });
 
-        _audioPlayer.positionStream.listen((position) {
+        _positionSub = _audioPlayer.positionStream.listen((position) {
           _position = position;
           notifyListeners();
         });
 
-        _audioPlayer.playerStateStream.listen((state) {
+        _playerStateSub = _audioPlayer.playerStateStream.listen((state) {
           _isPlaying = state.playing;
           notifyListeners();
         });
@@ -152,12 +160,11 @@ class AudioService extends ChangeNotifier {
     if (_isPlaying) {
       await player.pause();
       _isPlaying = false;
-      print('Paused');
     } else {
-      print('Playing');
       await player.play();
       _isPlaying = true;
     }
+    notifyListeners();
   }
 
   Future<void> seekTo(Duration position) async {
@@ -167,6 +174,10 @@ class AudioService extends ChangeNotifier {
 
   @override
   void dispose() {
+    _durationSub?.cancel();
+    _positionSub?.cancel();
+    _playerStateSub?.cancel();
+    _processingStateSub?.cancel();
     _audioPlayer.dispose();
     super.dispose();
   }
