@@ -180,6 +180,7 @@ class _IdentifiedSongWithPlaylistContent extends StatelessWidget {
                             title: song.title,
                             artist: song.artist,
                             imageUrl: song.imageUrl,
+                            playSource: 'Identified Song',
                           );
                           if (context.mounted) {
                             Navigator.pop(context);

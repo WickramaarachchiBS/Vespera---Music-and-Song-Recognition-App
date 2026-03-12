@@ -55,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final audioService = AudioService();
       final songIndex = playlist.indexWhere((s) => s.id == song.id);
       if (songIndex != -1) {
-        await audioService.playSongs(playlist: playlist, startIndex: songIndex);
+        await audioService.playSongs(playlist: playlist, startIndex: songIndex, playlistName: 'Your Library');
       } else {
         // If song not in playlist, play as single song
         await audioService.playSong(
@@ -63,6 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
           title: song.title,
           artist: song.artist,
           imageUrl: song.imageUrl,
+          playSource: 'Your Library',
         );
       }
     } catch (e) {

@@ -49,10 +49,22 @@ class AudioService extends ChangeNotifier {
   List<Song> _currentSongs = const [];
   int _currentIndex = 0;
   bool _playlistMode = false;
+  bool _isRepeat = false;
+  String? _playSource;
   StreamSubscription<ProcessingState>? _processingStateSub;
   StreamSubscription? _durationSub;
   StreamSubscription? _positionSub;
   StreamSubscription? _playerStateSub;
+
+  bool get isRepeat => _isRepeat;
+  String? get playSource => _playSource;
+
+  Future<void> toggleRepeat() async {
+    _isRepeat = !_isRepeat;
+    final player = _audioHandler?.player ?? _audioPlayer;
+    await player.setLoopMode(_isRepeat ? LoopMode.one : LoopMode.off);
+    notifyListeners();
+  }
 
   // Get current song as Song object
   Song? get currentSong {
@@ -81,11 +93,14 @@ class AudioService extends ChangeNotifier {
     String? title,
     String? artist,
     String? imageUrl,
+    String? playSource,
   }) async {
     // Cancel any previous stream subscriptions to avoid stale listeners.
     await _durationSub?.cancel();
     await _positionSub?.cancel();
     await _playerStateSub?.cancel();
+
+    if (playSource != null) _playSource = playSource;
 
     try {
       // Update current song details
@@ -182,12 +197,13 @@ class AudioService extends ChangeNotifier {
     super.dispose();
   }
 
-  Future<void> playSongs({required List<Song> playlist, required int startIndex}) async {
+  Future<void> playSongs({required List<Song> playlist, required int startIndex, String? playlistName}) async {
     if (playlist.isEmpty || startIndex < 0 || startIndex >= playlist.length) return;
 
     _currentSongs = playlist;
     _currentIndex = startIndex;
     _playlistMode = true;
+    if (playlistName != null) _playSource = playlistName;
 
     // Pass playlist context to audio handler
     if (_audioHandler != null) {

@@ -25,7 +25,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
   }
 
   Future<void> _playPlaylist(List<Song> songs, int startIndex) async {
-    await _audioService.playSongs(playlist: songs, startIndex: startIndex);
+    await _audioService.playSongs(playlist: songs, startIndex: startIndex, playlistName: widget.playlistName);
   }
 
   // Method to delete a song
