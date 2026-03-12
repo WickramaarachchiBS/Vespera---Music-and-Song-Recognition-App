@@ -93,6 +93,30 @@ class SearchService {
     }
   }
 
+  // Delete a single recent search entry
+  Future<void> deleteRecentSongSearch({required String userId, required String songId}) async {
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('recentSongSearches')
+        .doc(songId)
+        .delete();
+  }
+
+  // Delete all recent searches for the user
+  Future<void> clearAllRecentSongSearches(String userId) async {
+    final snap = await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('recentSongSearches')
+        .get();
+    final batch = _firestore.batch();
+    for (final doc in snap.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
+  }
+
   // Optional: store raw query terms
   Future<void> addRecentQuery({required String userId, required String query}) async {
     final docRef = _firestore

@@ -6,6 +6,7 @@ import 'package:vespera/models/song.dart';
 import 'package:vespera/services/audio_service.dart';
 import 'package:vespera/services/search_service.dart';
 import 'package:vespera/services/addSongsData.dart';
+import 'package:vespera/services/discovered_songs_service.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -253,7 +254,11 @@ class _SearchScreenState extends State<SearchScreen> {
                                 ),
                               ),
                               TextButton(
-                                onPressed: () {
+                                onPressed: () async {
+                                  final userId = FirebaseAuth.instance.currentUser?.uid;
+                                  if (userId != null) {
+                                    await _searchService.clearAllRecentSongSearches(userId);
+                                  }
                                   setState(() {
                                     recentSearches.clear();
                                   });
@@ -289,7 +294,15 @@ class _SearchScreenState extends State<SearchScreen> {
                                     Icons.close,
                                     color: AppColors.textPrimary.withOpacity(0.6),
                                   ),
-                                  onPressed: () {
+                                  onPressed: () async {
+                                    final userId = FirebaseAuth.instance.currentUser?.uid;
+                                    final songId = item['songId'] as String?;
+                                    if (userId != null && songId != null) {
+                                      await _searchService.deleteRecentSongSearch(
+                                        userId: userId,
+                                        songId: songId,
+                                      );
+                                    }
                                     setState(() {
                                       recentSearches.removeAt(index);
                                     });
