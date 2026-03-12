@@ -94,68 +94,72 @@ class _CommonScreenState extends State<CommonScreen> {
                 ],
               ),
             ),
-            const MiniMusicPlayer(),
-            const SizedBox(height: 120),
           ],
         ),
-        extendBody: true,
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            color: Colors.black,
-            border: Border(
-              top: BorderSide(
-                color: Colors.white.withOpacity(0.1),
-                width: 0.5,
-              ),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.4),
-                blurRadius: 10,
-                offset: const Offset(0, -5),
-              ),
-            ],
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              child: GNav(
-                rippleColor: Colors.grey[800]!,
-                hoverColor: Colors.grey[900]!,
-                haptic: true,
-                tabBorderRadius: 24,
-                tabActiveBorder: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
-                curve: Curves.easeInOut,
-                duration: const Duration(milliseconds: 300),
-                gap: 8,
-                color: Colors.grey[500],
-                activeColor: Colors.white,
-                iconSize: 24,
-                tabBackgroundColor: Colors.white.withOpacity(0.1),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                selectedIndex: _selectedIndex,
-                onTabChange: _onItemTapped,
-                tabs: const [
-                  GButton(
-                    icon: Icons.home_rounded,
-                    text: 'Home',
+        extendBody: false,
+        bottomNavigationBar: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const MiniMusicPlayer(),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.black,
+                border: Border(
+                  top: BorderSide(
+                    color: Colors.white.withOpacity(0.1),
+                    width: 0.5,
                   ),
-                  GButton(
-                    icon: Icons.search_rounded,
-                    text: 'Search',
-                  ),
-                  GButton(
-                    icon: Icons.library_music_rounded,
-                    text: 'Library',
-                  ),
-                  GButton(
-                    icon: Icons.graphic_eq_rounded,
-                    text: 'Whisper',
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.4),
+                    blurRadius: 10,
+                    offset: const Offset(0, -5),
                   ),
                 ],
               ),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  child: GNav(
+                    rippleColor: Colors.grey[800]!,
+                    hoverColor: Colors.grey[900]!,
+                    haptic: true,
+                    tabBorderRadius: 24,
+                    tabActiveBorder: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+                    curve: Curves.easeInOut,
+                    duration: const Duration(milliseconds: 300),
+                    gap: 8,
+                    color: Colors.grey[500],
+                    activeColor: Colors.white,
+                    iconSize: 24,
+                    tabBackgroundColor: Colors.white.withOpacity(0.1),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    selectedIndex: _selectedIndex,
+                    onTabChange: _onItemTapped,
+                    tabs: const [
+                      GButton(
+                        icon: Icons.home_rounded,
+                        text: 'Home',
+                      ),
+                      GButton(
+                        icon: Icons.search_rounded,
+                        text: 'Search',
+                      ),
+                      GButton(
+                        icon: Icons.library_music_rounded,
+                        text: 'Library',
+                      ),
+                      GButton(
+                        icon: Icons.graphic_eq_rounded,
+                        text: 'Whisper',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
