@@ -94,6 +94,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                   ),
                 ),
                 flexibleSpace: FlexibleSpaceBar(
+                  collapseMode: CollapseMode.parallax,
                   background: Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -106,9 +107,8 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                       ),
                     ),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        const SizedBox(height: 60),
                         Container(
                           margin: const EdgeInsets.symmetric(horizontal: 40),
                           decoration: BoxDecoration(
