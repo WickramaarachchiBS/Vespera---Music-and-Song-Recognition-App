@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:vespera/models/song.dart';
@@ -112,6 +113,9 @@ class AudioService extends ChangeNotifier {
       // Make UI react immediately (e.g. show mini player) before awaiting async loading.
       notifyListeners();
 
+      // Increment play count in Firestore (fire-and-forget).
+      _incrementPlayCount(audioUrl);
+
       // Use audio handler if available (enables background playback + notifications)
       if (_audioHandler != null) {
         await _audioHandler!.playFromUrl(
@@ -168,6 +172,24 @@ class AudioService extends ChangeNotifier {
       _isPlaying = false;
       notifyListeners();
     }
+  }
+
+  /// Increment the playCount field of the song document whose audioUrl matches.
+  void _incrementPlayCount(String audioUrl) {
+    FirebaseFirestore.instance
+        .collection('songs')
+        .where('audioUrl', isEqualTo: audioUrl)
+        .limit(1)
+        .get()
+        .then((snap) {
+      if (snap.docs.isNotEmpty) {
+        snap.docs.first.reference.update({
+          'playCount': FieldValue.increment(1),
+        });
+      }
+    }).catchError((e) {
+      debugPrint('playCount increment failed: $e');
+    });
   }
 
   Future<void> togglePlayPause() async {

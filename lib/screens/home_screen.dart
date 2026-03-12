@@ -291,6 +291,56 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             const SizedBox(height: 10.0),
+            // POPULAR SONGS SECTION
+            Container(
+              alignment: Alignment.bottomLeft,
+              margin: const EdgeInsets.only(left: 18.0),
+              child: const Text(
+                'Popular Right Now',
+                style: TextStyle(
+                  fontSize: 21.0,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            StreamBuilder<List<Song>>(
+              stream: _recommendationService.getPopularSongs(limit: 10),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Container(
+                    height: 200,
+                    child: const Center(
+                      child: CircularProgressIndicator(color: AppColors.textPrimary),
+                    ),
+                  );
+                }
+
+                if (snapshot.hasError) {
+                  return const SizedBox.shrink();
+                }
+
+                final songs = snapshot.data ?? [];
+                if (songs.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: songs
+                        .map(
+                          (song) => SongRecommendationItem(
+                            song: song,
+                            onTap: () => _playSong(song, songs),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 10.0),
             // RECOMMENDED PLAYLISTS SECTION
             Container(
               alignment: Alignment.bottomLeft,
