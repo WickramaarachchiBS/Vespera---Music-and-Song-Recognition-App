@@ -61,8 +61,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ),
         );
 
-        // Navigate to home screen
-        Navigator.pushReplacementNamed(context, '/home');
+        // Return to root; AuthWrapper will render the correct screen from auth state.
+        Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
       }
     } catch (e) {
       if (mounted) {
@@ -264,12 +264,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     Text('Already have an account? ', style: TextStyle(color: Colors.grey)),
                     TextButton(
                       onPressed: () {
-                        // Navigate to login
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => SignInScreen()),
-                        );
+                        Navigator.pushReplacementNamed(context, '/signIn');
                       },
                       child: Text(
                         'Log in',

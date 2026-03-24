@@ -24,18 +24,25 @@ class PlaylistService {
 
   // Get playlists for the current user
   Stream<QuerySnapshot> getUserPlaylists() {
-    if (_userId == null) throw Exception('User not authenticated');
+    final userId = _userId;
+    if (userId == null) {
+      // Return an always-empty query stream while auth state is resolving.
+      return _firestore.collection('playlists').where('userId', isEqualTo: '').limit(0).snapshots();
+    }
 
-    return _firestore.collection('playlists').where('userId', isEqualTo: _userId).snapshots();
+    return _firestore.collection('playlists').where('userId', isEqualTo: userId).snapshots();
   }
 
   // Get playlists for the current user (typed)
   Stream<List<Playlist>> getUserPlaylistsTyped() {
-    if (_userId == null) throw Exception('User not authenticated');
+    final userId = _userId;
+    if (userId == null) {
+      return Stream.value(const <Playlist>[]);
+    }
 
     return _firestore
         .collection('playlists')
-        .where('userId', isEqualTo: _userId)
+        .where('userId', isEqualTo: userId)
         .snapshots()
         .map((snap) => snap.docs.map((d) => Playlist.fromDoc(d)).toList());
   }

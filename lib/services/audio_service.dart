@@ -37,6 +37,14 @@ class AudioService extends ChangeNotifier {
 
   String? get currentImageUrl => _currentImageUrl;
 
+  bool get hasValidNetworkImage {
+    final raw = _currentImageUrl;
+    if (raw == null || raw.trim().isEmpty) return false;
+    final uri = Uri.tryParse(raw.trim());
+    if (uri == null) return false;
+    return (uri.scheme == 'http' || uri.scheme == 'https') && uri.host.isNotEmpty;
+  }
+
   String? get currentAudioUrl => _currentAudioUrl;
 
   bool get isPlaying => _isPlaying;

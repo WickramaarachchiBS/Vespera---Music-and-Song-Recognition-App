@@ -123,7 +123,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   borderRadius: BorderRadius.circular(12),
                   image: DecorationImage(
                     image:
-                        _audioService.currentImageUrl != null
+                        _audioService.hasValidNetworkImage
                             ? NetworkImage(_audioService.currentImageUrl!)
                             : const AssetImage('assets/dandelion.jpg') as ImageProvider,
                     fit: BoxFit.cover,

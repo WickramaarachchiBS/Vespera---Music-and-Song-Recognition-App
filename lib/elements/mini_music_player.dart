@@ -81,7 +81,7 @@ class _MiniMusicPlayerState extends State<MiniMusicPlayer> {
                                   const BorderRadius.all(Radius.circular(4)),
                               child: AspectRatio(
                                 aspectRatio: 1,
-                                child: _audioService.currentImageUrl != null
+                                child: _audioService.hasValidNetworkImage
                                     ? Image.network(
                                         _audioService.currentImageUrl!,
                                         fit: BoxFit.cover,

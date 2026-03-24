@@ -14,7 +14,9 @@ import 'package:vespera/services/recommendation_service.dart';
 import 'package:vespera/services/audio_service.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final void Function(String playlistId, String playlistName)? onOpenPlaylistFromHome;
+
+  const HomeScreen({super.key, this.onOpenPlaylistFromHome});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -42,11 +44,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Sign out from AuthService
     await AuthService().signOut();
-
-    // Navigate to welcome screen and remove all previous routes
-    if (context.mounted) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/welcome', (route) => false);
-    }
   }
 
   // Play a song using the audio service
@@ -177,6 +174,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       playlist: playlists[i],
                       onTap: () {
                         print('\x1B[32mPlaylist tapped: ${playlists[i].name}\x1B[0m');
+                        final openInLibrary = widget.onOpenPlaylistFromHome;
+                        if (openInLibrary != null) {
+                          openInLibrary(playlists[i].id, playlists[i].name);
+                          return;
+                        }
                         Navigator.of(context, rootNavigator: false).push(
                           MaterialPageRoute(
                             builder:
@@ -199,6 +201,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         playlist: playlists[i + 1],
                         onTap: () {
                           print('\x1B[32mPlaylist tapped: ${playlists[i + 1].name}\x1B[0m');
+                          final openInLibrary = widget.onOpenPlaylistFromHome;
+                          if (openInLibrary != null) {
+                            openInLibrary(playlists[i + 1].id, playlists[i + 1].name);
+                            return;
+                          }
                           Navigator.of(context, rootNavigator: false).push(
                             MaterialPageRoute(
                               builder:
@@ -395,6 +402,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         .map(
                           (playlist) => GestureDetector(
                             onTap: () {
+                              final openInLibrary = widget.onOpenPlaylistFromHome;
+                              if (openInLibrary != null) {
+                                openInLibrary(playlist.id, playlist.name);
+                                return;
+                              }
                               Navigator.of(context, rootNavigator: false).push(
                                 MaterialPageRoute(
                                   builder: (context) => PlaylistDetailScreen(
