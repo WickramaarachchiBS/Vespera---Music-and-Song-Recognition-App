@@ -77,13 +77,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
     double screenWidth = MediaQuery.of(context).size.width;
+    String username = Provider.of<UserProvider>(context).username;
+    String capitalizedUsername = username.isEmpty ? '' : username[0].toUpperCase() + username.substring(1);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
         backgroundColor: AppColors.backgroundDark,
         title: Text(
-          'Hello ${Provider.of<UserProvider>(context).username}',
+          'Hello $capitalizedUsername',
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 20,
@@ -96,6 +98,14 @@ class _HomeScreenState extends State<HomeScreen> {
             child: PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert_rounded, size: 25, color: AppColors.textMuted),
               color: AppColors.backgroundDark,
+              elevation: 8,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(
+                  color: Colors.white.withOpacity(0.1),
+                  width: 1,
+                ),
+              ),
               onSelected: (String value) {
                 if (value == 'signOut') {
                   _handleSignOut();

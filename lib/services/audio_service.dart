@@ -10,12 +10,16 @@ class AudioService extends ChangeNotifier {
 
   factory AudioService() => _instance;
 
-  AudioService._internal();
+  AudioService._internal() {
+    // Keep state in sync even before the handler is attached.
+    _bindToPlayer(_audioPlayer);
+  }
 
   MyAudioHandler? _audioHandler;
   
   void initializeHandler(MyAudioHandler handler) {
     _audioHandler = handler;
+    _bindToPlayer(handler.player);
   }
 
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -68,6 +72,27 @@ class AudioService extends ChangeNotifier {
   bool get isRepeat => _isRepeat;
   String? get playSource => _playSource;
 
+  void _bindToPlayer(AudioPlayer player) {
+    _durationSub?.cancel();
+    _positionSub?.cancel();
+    _playerStateSub?.cancel();
+
+    _durationSub = player.durationStream.listen((duration) {
+      _duration = duration ?? Duration.zero;
+      notifyListeners();
+    });
+
+    _positionSub = player.positionStream.listen((position) {
+      _position = position;
+      notifyListeners();
+    });
+
+    _playerStateSub = player.playerStateStream.listen((state) {
+      _isPlaying = state.playing;
+      notifyListeners();
+    });
+  }
+
   Future<void> toggleRepeat() async {
     _isRepeat = !_isRepeat;
     final player = _audioHandler?.player ?? _audioPlayer;
@@ -104,11 +129,6 @@ class AudioService extends ChangeNotifier {
     String? imageUrl,
     String? playSource,
   }) async {
-    // Cancel any previous stream subscriptions to avoid stale listeners.
-    await _durationSub?.cancel();
-    await _positionSub?.cancel();
-    await _playerStateSub?.cancel();
-
     if (playSource != null) _playSource = playSource;
 
     try {
@@ -117,6 +137,8 @@ class AudioService extends ChangeNotifier {
       _currentSongTitle = title;
       _currentArtist = artist;
       _currentImageUrl = imageUrl;
+      _duration = Duration.zero;
+      _position = Duration.zero;
 
       // Make UI react immediately (e.g. show mini player) before awaiting async loading.
       notifyListeners();
@@ -126,48 +148,17 @@ class AudioService extends ChangeNotifier {
 
       // Use audio handler if available (enables background playback + notifications)
       if (_audioHandler != null) {
+        _bindToPlayer(_audioHandler!.player);
         await _audioHandler!.playFromUrl(
           audioUrl,
           title: title ?? 'Unknown',
           artist: artist ?? 'Unknown',
           artUri: imageUrl,
         );
-        // Listen to the handler's player instead
-        final player = _audioHandler!.player;
-
-        _durationSub = player.durationStream.listen((duration) {
-          _duration = duration ?? Duration.zero;
-          notifyListeners();
-        });
-
-        _positionSub = player.positionStream.listen((position) {
-          _position = position;
-          notifyListeners();
-        });
-
-        _playerStateSub = player.playerStateStream.listen((state) {
-          _isPlaying = state.playing;
-          notifyListeners();
-        });
       } else {
         // Fallback to direct player (no background support)
+        _bindToPlayer(_audioPlayer);
         await _audioPlayer.setUrl(audioUrl);
-
-        _durationSub = _audioPlayer.durationStream.listen((duration) {
-          _duration = duration ?? Duration.zero;
-          notifyListeners();
-        });
-
-        _positionSub = _audioPlayer.positionStream.listen((position) {
-          _position = position;
-          notifyListeners();
-        });
-
-        _playerStateSub = _audioPlayer.playerStateStream.listen((state) {
-          _isPlaying = state.playing;
-          notifyListeners();
-        });
-
         await _audioPlayer.play();
       }
       
