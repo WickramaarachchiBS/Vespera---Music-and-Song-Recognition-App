@@ -10,7 +10,7 @@ class AddSongsData {
 
     final sampleSongs = <Map<String, dynamic>>[
       {
-        'album': 'METRO BOOMIN PRESENTS SPIDER-MAN: ACROSS THE SPIDER-VERSE',
+        'album': 'METRO BOOMIN PRvfeaESENTS SPIDER-MAN: ACROSS THE SPIDER-VERSE',
         'title': 'Am I Dreaming',
         'titleLowercase': 'am i dreaming',
         'artist': 'A\$AP Rocky, Metro Boomin, and Roisee',

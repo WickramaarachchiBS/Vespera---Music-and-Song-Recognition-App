@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vespera/colors.dart';
 import 'package:vespera/providers/user_provider.dart';
-import 'package:vespera/screens/signup_screen.dart';
 import 'package:vespera/services/auth_service.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -119,7 +118,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   keyboardType: TextInputType.emailAddress,
                   style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    hintText: 'name@domain.com',
+                    hintText: 'Enter email address',
                     hintStyle: TextStyle(color: Colors.grey),
                     filled: true,
                     fillColor: Color(0xFF282828),
@@ -167,7 +166,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   obscureText: _obscurePassword,
                   style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    hintText: 'Enter your password',
+                    hintText: 'Enter password',
                     hintStyle: TextStyle(color: Colors.grey),
                     filled: true,
                     fillColor: Color(0xFF282828),

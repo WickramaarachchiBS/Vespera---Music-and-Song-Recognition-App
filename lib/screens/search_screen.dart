@@ -6,7 +6,6 @@ import 'package:vespera/models/song.dart';
 import 'package:vespera/services/audio_service.dart';
 import 'package:vespera/services/search_service.dart';
 import 'package:vespera/services/addSongsData.dart';
-import 'package:vespera/services/discovered_songs_service.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});

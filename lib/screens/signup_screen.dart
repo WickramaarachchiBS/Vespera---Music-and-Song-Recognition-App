@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
 import 'package:vespera/constants.dart';
-import 'package:vespera/screens/signin_screen.dart';
 import 'package:vespera/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:vespera/providers/user_provider.dart';
@@ -132,7 +131,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   controller: _nameController,
                   keyboardType: TextInputType.emailAddress,
                   style: TextStyle(color: Colors.white),
-                  decoration: kInputDecoration.copyWith(hintText: 'Enter your username'),
+                  decoration: kInputDecoration.copyWith(hintText: 'Enter username'),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your username';
@@ -160,7 +159,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   style: TextStyle(color: Colors.white),
-                  decoration: kInputDecoration.copyWith(hintText: 'name@domain.com'),
+                  decoration: kInputDecoration.copyWith(hintText: 'Enter email address'),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
@@ -192,7 +191,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   obscureText: _obscurePassword,
                   style: TextStyle(color: Colors.white),
                   decoration: kInputDecoration.copyWith(
-                    hintText: 'Enter your password',
+                    hintText: 'Enter password',
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword ? Icons.visibility_off : Icons.visibility,

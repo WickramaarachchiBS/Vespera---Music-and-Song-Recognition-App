@@ -151,3 +151,4 @@ app.*.symbols
 
 # Song Upload Code (lib/services/addSongsData.dart)
 lib/services/addSongsData.dart
+lib/services/addSongsData.dart
