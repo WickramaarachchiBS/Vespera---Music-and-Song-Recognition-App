@@ -10,73 +10,73 @@ class AddSongsData {
 
     final sampleSongs = <Map<String, dynamic>>[
       {
-        'album': 'METRO BOOMIN PRvfeaESENTS SPIDER-MAN: ACROSS THE SPIDER-VERSE',
-        'title': 'Am I Dreaming',
-        'titleLowercase': 'am i dreaming',
-        'artist': 'A\$AP Rocky, Metro Boomin, and Roisee',
-        'artistLowercase': 'a\$ap rocky, metro boomin, and roisee',
+        'album': 'Deadbeat',
+        'title': 'Dracula',
+        'titleLowercase': 'dracula',
+        'artist': 'Tame Impala',
+        'artistLowercase': 'tame impala',
         'audioUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Metro%20Boomin,%20ASAP%20Rocky,%20Roisee%20-%20Am%20I%20Dreaming.mp3',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Tame%20Impala%20-%20Dracula.mp3?updatedAt=1775548248976',
         'imageUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Am%20I%20Dreaming%20-%20Metro%20Boomin,%20ASAP%20Rocky,%20Roisee%20(1).jpg',
-        'duration': 0,
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Dracula.jpg',
+        'duration': 205,
+        'genre': 'Indie',
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      {
+        'album': 'Currents',
+        'title': 'The Less I Know The Better',
+        'titleLowercase': 'the less i know the better',
+        'artist': 'Tame Impala',
+        'artistLowercase': 'tame impala',
+        'audioUrl':
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Tame%20Impala%20-%20The%20Less%20I%20Know%20The%20Better.mp3?updatedAt=1775548249741',
+        'imageUrl':
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/The%20less%20i%20know%20the%20better.jpg',
+        'duration': 217,
+        'genre': 'Funk/Indie/Pop/Disco',
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      {
+        'album': 'Her',
+        'title': 'Her',
+        'titleLowercase': 'her',
+        'artist': 'American Dawn',
+        'artistLowercase': 'american dawn',
+        'audioUrl':
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/The%20American%20Dawn%20-%20Her.mp3?updatedAt=1775548251542',
+        'imageUrl':
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Her.jpg',
+        'duration': 214,
+        'genre': 'Rock/Indie',
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      {
+        'album': 'Dawn FM',
+        'title': 'Is There Someone Else?',
+        'titleLowercase': 'is there someone else?',
+        'artist': 'The Weeknd',
+        'artistLowercase': 'the weeknd',
+        'audioUrl':
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/The%20Weeknd%20-%20Is%20There%20Someone%20Else.mp3?updatedAt=1775548251292',
+        'imageUrl':
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Is%20there%20someone%20else.jpg',
+        'duration': 199,
         'genre': 'R&B/Soul',
         'createdAt': FieldValue.serverTimestamp(),
       },
       {
-        'album': 'THE CASTLE NEVER FALLS',
-        'title': 'LET THE WORLD BURN',
-        'titleLowercase': 'let the world burn',
-        'artist': 'Chris Grey',
-        'artistLowercase': 'chris grey',
+        'album': 'Starboy',
+        'title': 'Starboy',
+        'titleLowercase': 'starboy',
+        'artist': 'The Weeknd, Daft Punk',
+        'artistLowercase': 'the weeknd, daft punk',
         'audioUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Chris-Grey%20-%20LET%20THE%20WORLD%20BURN.mp3?updatedAt=1770816194184',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/The%20Weeknd,%20Daft%20Punk%20-%20Starboy.mp3?updatedAt=1775548251219',
         'imageUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Let%20The%20World%20Burn%20-%20Chris%20Grey.jpg?updatedAt=1770816643220',
-        'duration': 0,
-        'genre': 'Contemporary R&B',
-        'createdAt': FieldValue.serverTimestamp(),
-      },
-      {
-        'album': 'BEAUTIFUL CHAOS: The Remixes',
-        'title': 'Gabriela',
-        'titleLowercase': 'gabriela',
-        'artist': 'KATSEYE',
-        'artistLowercase': 'katseye',
-        'audioUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/KATSEYE%20-%20Gabriela.mp3?updatedAt=1770816178168',
-        'imageUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Gabriela%20-%20KATSEYE.jpg?updatedAt=1770816643221',
-        'duration': 0,
-        'genre': 'Rhythm and blues, Latin music',
-        'createdAt': FieldValue.serverTimestamp(),
-      },
-      {
-        'album': 'Still With You',
-        'title': 'Still With You',
-        'titleLowercase': 'still with you',
-        'artist': 'Jung Kook',
-        'artistLowercase': 'jung kook',
-        'audioUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Chris-Grey%20-%20LET%20THE%20WORLD%20BURN.mp3?updatedAt=1770816194184',
-        'imageUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Let%20The%20World%20Burn%20-%20Chris%20Grey.jpg?updatedAt=1770816643220',
-        'duration': 0,
-        'genre': 'Rhythm and blues',
-        'createdAt': FieldValue.serverTimestamp(),
-      },
-      {
-        'album': 'JUST A BOY',
-        'title': 'JUST A BOY',
-        'titleLowercase': 'just a boy',
-        'artist': 'DrINsaNE',
-        'artistLowercase': 'drinsane',
-        'audioUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/DrINsaNE%20-%20JUST%20A%20BOY.mp3?updatedAt=1770816187101',
-        'imageUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Just%20A%20Boy%20-%20DrINsaNE.jpg?updatedAt=1770816643172',
-        'duration': 0,
-        'genre': 'Pop',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Starboy.jpg',
+        'duration': 230,
+        'genre': 'R&B/Pop',
         'createdAt': FieldValue.serverTimestamp(),
       },
     ];

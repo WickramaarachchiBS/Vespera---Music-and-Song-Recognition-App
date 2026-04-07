@@ -63,7 +63,10 @@ class PlaylistService {
   Future<void> addSongToPlaylist(String playlistId, Map<String, dynamic> songData) async {
     if (_userId == null) throw Exception('User not authenticated');
 
-    await _firestore.collection('playlists').doc(playlistId).collection('songs').add(songData);
+    final payload = Map<String, dynamic>.from(songData);
+    payload['addedAt'] = FieldValue.serverTimestamp();
+
+    await _firestore.collection('playlists').doc(playlistId).collection('songs').add(payload);
   }
 
   // Get songs in a playlist (typed)
@@ -72,6 +75,7 @@ class PlaylistService {
         .collection('playlists')
         .doc(playlistId)
         .collection('songs')
+      .orderBy('addedAt', descending: true)
         .snapshots()
         .map((snap) => snap.docs.map((d) => Song.fromDoc(d)).toList());
   }
@@ -79,7 +83,11 @@ class PlaylistService {
   // Add a song using the model
   Future<void> addSongToPlaylistModel(String playlistId, Song song) async {
     if (_userId == null) throw Exception('User not authenticated');
-    await _firestore.collection('playlists').doc(playlistId).collection('songs').add(song.toMap());
+
+    final payload = Map<String, dynamic>.from(song.toMap());
+    payload['addedAt'] = FieldValue.serverTimestamp();
+
+    await _firestore.collection('playlists').doc(playlistId).collection('songs').add(payload);
   }
 
   // Remove a song from a playlist
