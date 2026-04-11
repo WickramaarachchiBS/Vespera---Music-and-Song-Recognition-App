@@ -12,7 +12,7 @@ class AppNotification {
   }) async {
     final navigator = Navigator.of(context, rootNavigator: true);
 
-    final dialogFuture = showGeneralDialog<void>(
+    showGeneralDialog<void>(
       context: context,
       barrierDismissible: false,
       barrierLabel: 'notification',
