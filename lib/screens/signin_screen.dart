@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vespera/colors.dart';
+import 'package:vespera/helpers/app_notification.dart';
 import 'package:vespera/providers/user_provider.dart';
 import 'package:vespera/services/auth_service.dart';
 
@@ -46,22 +47,14 @@ class _SignInScreenState extends State<SignInScreen> {
       if (mounted) {
         await Provider.of<UserProvider>(context, listen: false).loadUserData();
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Signed in successfully!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        AppNotification.showSuccess(context, 'Successfully signed in!');
 
         // Return to root; AuthWrapper will render the correct screen from auth state.
         Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
+        AppNotification.showError(context, 'Failed to sign in. Please check your credentials.');
       }
     } finally {
       if (mounted) {

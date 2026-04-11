@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
+import 'package:vespera/helpers/app_notification.dart';
 import 'package:vespera/models/song.dart';
 import 'package:vespera/screens/common_screen.dart';
 import 'package:vespera/services/audio_service.dart';
@@ -33,18 +34,11 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
     try {
       await _playlistService.removeSongFromPlaylist(widget.playlistId, songId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Removed "$songTitle" from playlist'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        AppNotification.showSuccess(context, 'Removed "$songTitle" from playlist');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error removing song: $e'), backgroundColor: Colors.red),
-        );
+        AppNotification.showError(context, 'Error removing song: $e');
       }
     }
   }

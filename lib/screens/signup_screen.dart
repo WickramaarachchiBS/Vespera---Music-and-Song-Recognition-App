@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
 import 'package:vespera/constants.dart';
+import 'package:vespera/helpers/app_notification.dart';
 import 'package:vespera/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:vespera/providers/user_provider.dart';
@@ -52,22 +53,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
         // Load user data into provider after successful sign up
         await Provider.of<UserProvider>(context, listen: false).loadUserData();
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Welcome to Vesper!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        AppNotification.showSuccess(context, 'Successfully signed up!');
 
         // Return to root; AuthWrapper will render the correct screen from auth state.
         Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
+        AppNotification.showError(context, 'Failed to sign up. Please try again.');
       }
     } finally {
       if (mounted) {

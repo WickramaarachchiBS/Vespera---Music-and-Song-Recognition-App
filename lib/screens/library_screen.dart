@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
 import 'package:vespera/components/create_playlist_modal.dart';
+import 'package:vespera/helpers/app_notification.dart';
 import 'package:vespera/screens/playlist_detail_screen.dart';
 import 'package:vespera/services/playlist_service.dart';
 
@@ -21,18 +22,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
       await _playlistService.createPlaylist(playlistName, 'assets/dandelion.jpg');
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Playlist "$playlistName" created!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        AppNotification.showSuccess(context, 'Playlist "$playlistName" created!');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error creating playlist: $e'), backgroundColor: Colors.red),
-        );
+        AppNotification.showError(context, 'Error creating playlist: $e');
       }
     }
   }
@@ -230,21 +224,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           try {
                             await _playlistService.deletePlaylist(playlistId);
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Deleted "$name"'),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
+                              AppNotification.showSuccess(context, 'Deleted playlist "$name"');
                             }
                           } catch (e) {
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Error deleting playlist: $e'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
+                              AppNotification.showError(context, 'Error deleting playlist: $e');
                             }
                           }
                         },
