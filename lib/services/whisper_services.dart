@@ -1,7 +1,6 @@
+import 'dart:async';
 import 'dart:io';
-
 import 'dart:convert';
-
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
@@ -19,7 +18,7 @@ class WhisperRecordingResult {
   bool get isSuccess => savedPath != null;
 }
 
-enum WhisperRecordingFailure { permissionDenied, alreadyRecording, failed }
+enum WhisperRecordingFailure { permissionDenied, alreadyRecording, failed, cancelled }
 
 class SongIdentificationResult {
   final bool ok;
@@ -52,9 +51,16 @@ class WhisperService {
 
   bool _isRecording = false;
   String? _lastSavedPath;
+  Completer<void>? _cancelCompleter;
 
   bool get isRecording => _isRecording;
   String? get lastSavedPath => _lastSavedPath;
+
+  void cancelRecording() {
+    if (_cancelCompleter != null && !_cancelCompleter!.isCompleted) {
+      _cancelCompleter!.complete();
+    }
+  }
 
   Future<void> dispose() async {
     // record's AudioRecorder implements dispose in v6.
@@ -77,17 +83,37 @@ class WhisperService {
       final outputPath = await _buildOutputPath();
 
       await _recorder.start(
-        const RecordConfig(encoder: AudioEncoder.wav, sampleRate: 44100), // Try WAV instead
+        const RecordConfig(
+          encoder: AudioEncoder.wav,
+          sampleRate: 16000,
+          numChannels: 1,      // mono — matches server expectation
+          noiseSuppress: true, // enables Android NoiseSuppressor / iOS equivalent
+        ),
         path: outputPath,
       );
 
       // ---------------------
-      // Recording time
-      //---------------------- 
-      await Future.delayed(const Duration(seconds: 15));
+      // Recording time (or early cancel)
+      //----------------------
+      _cancelCompleter = Completer<void>();
+      await Future.any([
+        Future.delayed(const Duration(seconds: 15)),
+        _cancelCompleter!.future,
+      ]);
+      final wasCancelled = _cancelCompleter!.isCompleted;
+      _cancelCompleter = null;
 
       final stoppedPath = await _recorder.stop();
       _isRecording = false;
+
+      if (wasCancelled) {
+        // Delete the partial recording
+        try {
+          final f = File(stoppedPath ?? outputPath);
+          if (await f.exists()) await f.delete();
+        } catch (_) {}
+        return const WhisperRecordingResult.failure(WhisperRecordingFailure.cancelled);
+      }
 
       final savedPath = stoppedPath ?? outputPath;
       _lastSavedPath = savedPath;
@@ -95,6 +121,7 @@ class WhisperService {
       return WhisperRecordingResult.success(savedPath);
     } catch (_) {
       _isRecording = false;
+      _cancelCompleter = null;
       return const WhisperRecordingResult.failure(WhisperRecordingFailure.failed);
     }
   }
@@ -162,6 +189,12 @@ class WhisperService {
     } catch (e) {
       print('❌ Upload error: $e');
       return SongIdentificationResult.failure('Upload failed: $e');
+    } finally {
+      // Delete the local recording after upload (success or failure) to avoid accumulating WAV files
+      try {
+        final f = File(filePath);
+        if (await f.exists()) await f.delete();
+      } catch (_) {}
     }
   }
 
@@ -185,6 +218,6 @@ class WhisperService {
     }
 
     final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
-    return '${recordingsDir.path}${sep}whisper_$timestamp.wav'; // Change extension
+    return '${recordingsDir.path}${sep}whisper_$timestamp.wav';
   }
 }

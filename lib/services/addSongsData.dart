@@ -10,31 +10,73 @@ class AddSongsData {
 
     final sampleSongs = <Map<String, dynamic>>[
       {
-        'album': '',
-        'title': '18 Wannam',
-        'titleLowercase': '18 wannam',
-        'artist': 'Yuki Navaratne, Ravi Jay.',
-        'artistLowercase': 'yuki navaratne ravi jay.',
+        'album': 'Deadbeat',
+        'title': 'Dracula',
+        'titleLowercase': 'dracula',
+        'artist': 'Tame Impala',
+        'artistLowercase': 'tame impala',
         'audioUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Yuki%20Navaratne,%20Ravi%20Jay%20-%2018%20Wannam.mp3?updatedAt=1768980911377',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Tame%20Impala%20-%20Dracula.mp3?updatedAt=1775548248976',
         'imageUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/18%20Wannam%20-%20Yuki%20Nawarathen,%20Ravi%20Jay.jpg',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Dracula.jpg',
         'duration': 205,
-        'genre': 'Pop',
+        'genre': 'Indie',
         'createdAt': FieldValue.serverTimestamp(),
       },
       {
-        'album': 'Bambara Pahasa',
-        'title': 'Sande Oba',
-        'titleLowercase': 'sande oba',
-        'artist': 'Rookantha Gunathilake',
-        'artistLowercase': 'rookantha gunathilake',
+        'album': 'Currents',
+        'title': 'The Less I Know The Better',
+        'titleLowercase': 'the less i know the better',
+        'artist': 'Tame Impala',
+        'artistLowercase': 'tame impala',
         'audioUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Sande_Oba_Aida_Me_Yame_Rookantha_Gunathilaka_Sarigama_lk.mp3?updatedAt=1768980747800',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Tame%20Impala%20-%20The%20Less%20I%20Know%20The%20Better.mp3?updatedAt=1775548249741',
         'imageUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Sande%20Oba%20-%20Rookantha%20Goonathilake.jpg',
-        'duration': 200,
-        'genre': 'Sinhala Pop',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/The%20less%20i%20know%20the%20better.jpg',
+        'duration': 217,
+        'genre': 'Funk/Indie/Pop/Disco',
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      {
+        'album': 'Her',
+        'title': 'Her',
+        'titleLowercase': 'her',
+        'artist': 'American Dawn',
+        'artistLowercase': 'american dawn',
+        'audioUrl':
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/The%20American%20Dawn%20-%20Her.mp3?updatedAt=1775548251542',
+        'imageUrl':
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Her.jpg',
+        'duration': 214,
+        'genre': 'Rock/Indie',
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      {
+        'album': 'Dawn FM',
+        'title': 'Is There Someone Else?',
+        'titleLowercase': 'is there someone else?',
+        'artist': 'The Weeknd',
+        'artistLowercase': 'the weeknd',
+        'audioUrl':
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/The%20Weeknd%20-%20Is%20There%20Someone%20Else.mp3?updatedAt=1775548251292',
+        'imageUrl':
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Is%20there%20someone%20else.jpg',
+        'duration': 199,
+        'genre': 'R&B/Soul',
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      {
+        'album': 'Starboy',
+        'title': 'Starboy',
+        'titleLowercase': 'starboy',
+        'artist': 'The Weeknd, Daft Punk',
+        'artistLowercase': 'the weeknd, daft punk',
+        'audioUrl':
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/The%20Weeknd,%20Daft%20Punk%20-%20Starboy.mp3?updatedAt=1775548251219',
+        'imageUrl':
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Starboy.jpg',
+        'duration': 230,
+        'genre': 'R&B/Pop',
         'createdAt': FieldValue.serverTimestamp(),
       },
     ];
