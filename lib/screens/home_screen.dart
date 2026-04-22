@@ -8,6 +8,7 @@ import 'package:vespera/models/playlist.dart';
 import 'package:vespera/models/song.dart';
 import 'package:vespera/providers/user_provider.dart';
 import 'package:vespera/screens/playlist_detail_screen.dart';
+import 'package:vespera/screens/profile_screen.dart';
 import 'package:vespera/services/auth_service.dart';
 import 'package:vespera/services/playlist_service.dart';
 import 'package:vespera/services/recommendation_service.dart';
@@ -38,11 +39,16 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _handleSignOut() async {
-    // Clear user provider data
-    Provider.of<UserProvider>(context, listen: false).clearUserData();
+  // Navigate to profile screen
+  void _handleProfile() {
+    Navigator.of(context, rootNavigator: false).push(
+      MaterialPageRoute(builder: (context) => const ProfileScreen()),
+    );
+  }
 
-    // Sign out from AuthService
+  // Clear user provider data and sign out
+  Future<void> _handleSignOut() async {
+    Provider.of<UserProvider>(context, listen: false).clearUserData();
     await AuthService().signOut();
   }
 
@@ -107,12 +113,28 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               onSelected: (String value) {
-                if (value == 'signOut') {
-                  _handleSignOut();
+                switch
+                (value) {
+                  case 'profile':
+                   _handleProfile();
+                    break;
+                  case 'signOut':
+                    _handleSignOut();
+                    break;
                 }
               },
               itemBuilder:
                   (BuildContext context) => [
+                    const PopupMenuItem<String>(
+                      value: 'profile',
+                      child: Row(
+                        children: [
+                          Icon(Icons.person, color: AppColors.textPrimary),
+                          SizedBox(width: 10),
+                          Text('My Profile', style: TextStyle(color: AppColors.textPrimary)),
+                        ],
+                      ),
+                    ),
                     const PopupMenuItem<String>(
                       value: 'signOut',
                       child: Row(

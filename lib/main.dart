@@ -6,6 +6,7 @@ import 'package:vespera/providers/user_provider.dart';
 import 'package:vespera/providers/whisper_provider.dart';
 import 'package:vespera/screens/common_screen.dart';
 import 'package:vespera/screens/library_screen.dart';
+import 'package:vespera/screens/profile_screen.dart';
 import 'package:vespera/screens/search_screen.dart';
 import 'package:vespera/screens/signin_screen.dart';
 import 'package:vespera/screens/signup_screen.dart';
@@ -62,6 +63,7 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const CommonScreen(),
         '/search': (context) => const SearchScreen(),
         '/library': (context) => const LibraryScreen(),
+        '/profile': (context) => const ProfileScreen(),
         '/whisper': (context) => const WhisperScreen(),
       },
     );

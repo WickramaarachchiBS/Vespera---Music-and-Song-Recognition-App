@@ -162,6 +162,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     String playlistId = playlist.id;
                     String name = playlistData['name'] ?? 'Untitled';
                     String imageURL = playlistData['imageURL'] ?? 'err';
+                    final imageUri = Uri.tryParse(imageURL);
+                    final isNetworkImage =
+                      imageUri != null &&
+                      (imageUri.scheme == 'http' || imageUri.scheme == 'https') &&
+                      imageUri.host.isNotEmpty;
 
                     return Container(
                       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -260,7 +265,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                             height: 60,
                                             fit: BoxFit.cover,
                                           )
-                                        : Image.network(
+                                        : isNetworkImage
+                                        ? Image.network(
+                                            imageURL,
+                                            width: 60,
+                                            height: 60,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return Image.asset(
+                                                'assets/errorLoading.jpg',
+                                                width: 60,
+                                                height: 60,
+                                                fit: BoxFit.cover,
+                                              );
+                                            },
+                                          )
+                                        : Image.asset(
                                             imageURL,
                                             width: 60,
                                             height: 60,
