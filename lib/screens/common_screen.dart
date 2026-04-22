@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:provider/provider.dart';
 import 'package:vespera/elements/mini_music_player.dart';
+import 'package:vespera/providers/user_provider.dart';
 import 'package:vespera/screens/home_screen.dart';
 import 'package:vespera/screens/library_screen.dart';
 import 'package:vespera/screens/playlist_detail_screen.dart';
@@ -35,6 +37,14 @@ class _CommonScreenState extends State<CommonScreen> {
   void initState() {
     super.initState();
     _selectedIndex = _safeTabIndex(widget.initialIndex);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      if (userProvider.username == 'User') {
+        userProvider.loadUserData();
+      }
+    });
   }
   Future<bool> _onWillPop() async {
     final keys = [_homeKey, _searchKey, _libraryKey];

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vespera/colors.dart';
+import 'package:vespera/components/appbar_profile_avatar.dart';
 import 'package:vespera/components/home_screen_lib_item.dart';
 import 'package:vespera/components/home_screen_rec_item.dart';
 import 'package:vespera/components/song_recommendation_item.dart';
@@ -8,7 +9,6 @@ import 'package:vespera/models/playlist.dart';
 import 'package:vespera/models/song.dart';
 import 'package:vespera/providers/user_provider.dart';
 import 'package:vespera/screens/playlist_detail_screen.dart';
-import 'package:vespera/screens/profile_screen.dart';
 import 'package:vespera/services/auth_service.dart';
 import 'package:vespera/services/playlist_service.dart';
 import 'package:vespera/services/recommendation_service.dart';
@@ -26,25 +26,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final PlaylistService _playlistService = PlaylistService();
   final RecommendationService _recommendationService = RecommendationService();
-
-  @override
-  void initState() {
-    super.initState();
-    // Load user data only if not already loaded
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-      if (userProvider.username == 'User') {
-        userProvider.loadUserData();
-      }
-    });
-  }
-
-  // Navigate to profile screen
-  void _handleProfile() {
-    Navigator.of(context, rootNavigator: false).push(
-      MaterialPageRoute(builder: (context) => const ProfileScreen()),
-    );
-  }
 
   // Clear user provider data and sign out
   Future<void> _handleSignOut() async {
@@ -90,13 +71,18 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
         backgroundColor: AppColors.backgroundDark,
-        title: Text(
-          'Hello $capitalizedUsername',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-            color: AppColors.textMuted,
-          ),
+        title: Row(
+          children: [
+            const AppBarProfileAvatar(),
+            Text(
+              'Hello $capitalizedUsername',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: AppColors.textMuted,
+              ),
+            ),
+          ],
         ),
         actions: [
           Container(
@@ -113,11 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               onSelected: (String value) {
-                switch
-                (value) {
-                  case 'profile':
-                   _handleProfile();
-                    break;
+                switch (value) {
                   case 'signOut':
                     _handleSignOut();
                     break;
@@ -125,16 +107,6 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               itemBuilder:
                   (BuildContext context) => [
-                    const PopupMenuItem<String>(
-                      value: 'profile',
-                      child: Row(
-                        children: [
-                          Icon(Icons.person, color: AppColors.textPrimary),
-                          SizedBox(width: 10),
-                          Text('My Profile', style: TextStyle(color: AppColors.textPrimary)),
-                        ],
-                      ),
-                    ),
                     const PopupMenuItem<String>(
                       value: 'signOut',
                       child: Row(
@@ -150,6 +122,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    
+      
       body: SingleChildScrollView(
         child: Column(
           children: [
