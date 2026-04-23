@@ -40,7 +40,12 @@ class DeleteAccountDialog {
               ),
               actions: [
                 TextButton(
-                  onPressed: isDeleting ? null : () => Navigator.of(dialogContext).pop(),
+                  onPressed: isDeleting
+                      ? null
+                      : () {
+                          FocusManager.instance.primaryFocus?.unfocus();
+                          Navigator.of(dialogContext).pop();
+                        },
                   child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
                 ),
                 ElevatedButton(
@@ -64,16 +69,25 @@ class DeleteAccountDialog {
                             await authService.deleteAccount(currentPassword: password);
                             if (!context.mounted) return;
 
-                            Provider.of<UserProvider>(context, listen: false).clearUserData();
+                            // Clear user data before navigation
+                            final userProvider = Provider.of<UserProvider>(context, listen: false);
+                            userProvider.clearUserData();
+                            
+                            if (!context.mounted) return;
+                            FocusManager.instance.primaryFocus?.unfocus();
                             Navigator.of(dialogContext).pop();
+                            
+                            if (!context.mounted) return;
                             Navigator.of(context, rootNavigator: true)
                                 .pushNamedAndRemoveUntil('/welcome', (route) => false);
                           } catch (e) {
                             if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(e.toString())),
-                            );
                             setDialogState(() => isDeleting = false);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(e.toString())),
+                              );
+                            }
                           }
                         },
                   child: isDeleting

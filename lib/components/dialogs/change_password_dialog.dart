@@ -43,7 +43,12 @@ class ChangePasswordDialog {
               ),
               actions: [
                 TextButton(
-                  onPressed: isSaving ? null : () => Navigator.of(dialogContext).pop(),
+                  onPressed: isSaving
+                      ? null
+                      : () {
+                          FocusManager.instance.primaryFocus?.unfocus();
+                          Navigator.of(dialogContext).pop();
+                        },
                   child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
                 ),
                 ElevatedButton(
@@ -69,16 +74,21 @@ class ChangePasswordDialog {
                               newPassword: newPassword,
                             );
                             if (!context.mounted) return;
+                            FocusManager.instance.primaryFocus?.unfocus();
                             Navigator.of(dialogContext).pop();
+                            
+                            if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Password updated successfully.')),
                             );
                           } catch (e) {
                             if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(e.toString())),
-                            );
                             setDialogState(() => isSaving = false);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(e.toString())),
+                              );
+                            }
                           }
                         },
                   child: isSaving

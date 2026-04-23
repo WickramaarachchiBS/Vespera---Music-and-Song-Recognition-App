@@ -52,7 +52,12 @@ class ProfileEditDialog {
               ),
               actions: [
                 TextButton(
-                  onPressed: isSaving ? null : () => Navigator.of(dialogContext).pop(),
+                  onPressed: isSaving
+                      ? null
+                      : () {
+                          FocusManager.instance.primaryFocus?.unfocus();
+                          Navigator.of(dialogContext).pop();
+                        },
                   child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
                 ),
                 ElevatedButton(
@@ -81,19 +86,30 @@ class ProfileEditDialog {
                               name: updatedName,
                               profilePicture: updatedPhoto,
                             );
-                            await userProvider.loadUserData();
 
                             if (!context.mounted) return;
+                            FocusManager.instance.primaryFocus?.unfocus();
                             Navigator.of(dialogContext).pop();
+
+                            // Load user data after dialog closes to avoid state changes during build
+                            if (context.mounted) {
+                              await userProvider.loadUserData();
+                            }
+                            
+                            if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Profile updated successfully.')),
                             );
                           } catch (e) {
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Failed to update profile: $e')),
-                            );
+                            if (!context.mounted) {
+                              return;
+                            }
                             setDialogState(() => isSaving = false);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Failed to update profile: $e')),
+                              );
+                            }
                           }
                         },
                   child: isSaving

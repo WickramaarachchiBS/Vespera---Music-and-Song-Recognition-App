@@ -4,9 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vespera/colors.dart';
 import 'package:vespera/components/analytics_card.dart';
-import 'package:vespera/components/dialogs/change_email_dialog.dart';
-import 'package:vespera/components/dialogs/change_password_dialog.dart';
-import 'package:vespera/components/dialogs/delete_account_dialog.dart';
 import 'package:vespera/components/dialogs/profile_edit_dialog.dart';
 import 'package:vespera/components/profile_hero_header.dart';
 import 'package:vespera/components/top_list_card.dart';
@@ -29,7 +26,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    // Schedule loading data after first frame to avoid issues
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       if (userProvider.username == 'User') {
         userProvider.loadUserData();
@@ -95,10 +94,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SectionTitle(title: 'Playlists'),
               const SizedBox(height: 10),
               _buildLibraryLink(),
-              const SizedBox(height: 24),
-              const SectionTitle(title: 'Account & Security'),
-              const SizedBox(height: 10),
-              _buildAccountSecurity(),
             ],
           ),
         ),
@@ -257,7 +252,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildLibraryLink() {
     return Material(
-      color: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: Colors.blueGrey.withOpacity(0.1),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
@@ -268,63 +264,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
         },
         child: Ink(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          decoration: BoxDecoration(
-            color: AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.divider.withOpacity(0.4)),
-          ),
-          child: const Row(
-            children: [
+      child: Column(
+        children: [
+          Row(
+            children: const [
               Icon(Icons.library_music_rounded, color: AppColors.textPrimary),
-              SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Go to your Library',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+              SizedBox(width: 12),
+              Text('Go to your library', style: TextStyle(color: AppColors.textPrimary, fontSize: 16)),
+              Spacer(),
               Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAccountSecurity() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.divider.withOpacity(0.35)),
-      ),
-      child: Column(
-        children: [
-          ListTile(
-            leading: const Icon(Icons.alternate_email_rounded, color: AppColors.textPrimary),
-            title: const Text('Change email', style: TextStyle(color: AppColors.textPrimary)),
-            trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
-            onTap: () => ChangeEmailDialog.show(context),
-          ),
-          Divider(height: 1, color: AppColors.divider.withOpacity(0.35)),
-          ListTile(
-            leading: const Icon(Icons.password_rounded, color: AppColors.textPrimary),
-            title: const Text('Change password', style: TextStyle(color: AppColors.textPrimary)),
-            trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
-            onTap: () => ChangePasswordDialog.show(context),
-          ),
-          Divider(height: 1, color: AppColors.divider.withOpacity(0.35)),
-          ListTile(
-            leading: const Icon(Icons.delete_forever_rounded, color: AppColors.error),
-            title: const Text('Delete account', style: TextStyle(color: AppColors.error)),
-            trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
-            onTap: () => DeleteAccountDialog.show(context),
-          ),
         ],
+      ),
+        ),
       ),
     );
   }
