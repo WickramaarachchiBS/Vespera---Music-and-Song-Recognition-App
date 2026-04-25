@@ -21,11 +21,6 @@ class WhisperProvider extends ChangeNotifier {
   String? get lastSavedPath => _lastSavedPath;
   bool get isListening => _state == ListeningState.listening;
 
-  // Configuration
-  // static const String identifyEndpoint = 'http://192.168.1.80:8000/api/identify';
-  static const String identifyEndpoint = 'https://vesper-song-recognition-hrd3bsgagre6adc0.centralindia-01.azurewebsites.net/api/identify';
-
-
   WhisperProvider() {
     loadDiscoveredSongs();
   }
@@ -67,11 +62,7 @@ class WhisperProvider extends ChangeNotifier {
     }
 
     // Identify the song
-    final identify = await _whisperService.identifySongFromFile(
-      filePath: _lastSavedPath!,
-      endpoint: Uri.parse(identifyEndpoint),
-      fileField: 'audio_file',
-    );
+    final identify = await _whisperService.identifySongFromFile(filePath: _lastSavedPath!);
 
     if (!identify.ok) {
       return SongRecognitionResult.error(identify.error ?? 'Song identification failed.');

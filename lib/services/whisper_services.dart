@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
+import 'package:vespera/services/recognition/peak_extractor.dart';
+import 'package:vespera/services/recognition/recognition_config.dart';
+import 'package:vespera/services/recognition/recognition_models.dart';
+import 'package:vespera/services/recognition/recognizers.dart';
 
 class WhisperRecordingResult {
   final String? savedPath;
@@ -20,38 +22,41 @@ class WhisperRecordingResult {
 
 enum WhisperRecordingFailure { permissionDenied, alreadyRecording, failed, cancelled }
 
-class SongIdentificationResult {
-  final bool ok;
-  final String? title;
-  final String? artist;
-  final double? confidence;
-  final Map<String, dynamic>? raw;
-  final String? error;
-
-  const SongIdentificationResult._({
-    required this.ok,
-    required this.title,
-    required this.artist,
-    required this.confidence,
-    required this.raw,
-    required this.error,
-  });
-
-  const SongIdentificationResult.success({String? title, String? artist, double? confidence, Map<String, dynamic>? raw})
-    : this._(ok: true, title: title, artist: artist, confidence: confidence, raw: raw, error: null);
-
-  const SongIdentificationResult.failure(String message)
-    : this._(ok: false, title: null, artist: null, confidence: null, raw: null, error: message);
-}
-
 class WhisperService {
-  WhisperService({AudioRecorder? recorder}) : _recorder = recorder ?? AudioRecorder();
+  WhisperService({AudioRecorder? recorder, RecognitionOrchestrator? orchestrator})
+    : _recorder = recorder ?? AudioRecorder(),
+      _orchestrator = orchestrator ?? _buildDefaultOrchestrator();
 
   final AudioRecorder _recorder;
+  final RecognitionOrchestrator _orchestrator;
+
+  static const String _baseEndpoint =
+      'https://vesper-song-recognition-hrd3bsgagre6adc0.centralindia-01.azurewebsites.net';
+  static const String identifyAudioEndpoint = '$_baseEndpoint/api/identify';
+  static const String identifyPeaksEndpoint = '$_baseEndpoint/api/identify-peaks';
+
+  static RecognitionConfig _defaultConfig() {
+    return RecognitionConfig(
+      peakEndpoint: Uri.parse(identifyPeaksEndpoint),
+      audioEndpoint: Uri.parse(identifyAudioEndpoint),
+      mode: RecognitionConfig.modeFromEnvironment(),
+      appVersion: const String.fromEnvironment('VESPER_APP_VERSION', defaultValue: '1.0.0'),
+    );
+  }
+
+  static RecognitionOrchestrator _buildDefaultOrchestrator() {
+    final RecognitionConfig config = _defaultConfig();
+    return RecognitionOrchestrator(
+      config: config,
+      peakRecognizer: PeakBasedRecognizer(config: config, extractor: const PeakExtractor()),
+      audioUploadRecognizer: AudioUploadRecognizer(config: config),
+    );
+  }
 
   bool _isRecording = false;
   String? _lastSavedPath;
   Completer<void>? _cancelCompleter;
+  RecognitionCancellationToken? _activeRecognitionToken;
 
   bool get isRecording => _isRecording;
   String? get lastSavedPath => _lastSavedPath;
@@ -60,6 +65,7 @@ class WhisperService {
     if (_cancelCompleter != null && !_cancelCompleter!.isCompleted) {
       _cancelCompleter!.complete();
     }
+    _activeRecognitionToken?.cancel();
   }
 
   Future<void> dispose() async {
@@ -83,12 +89,7 @@ class WhisperService {
       final outputPath = await _buildOutputPath();
 
       await _recorder.start(
-        const RecordConfig(
-          encoder: AudioEncoder.wav,
-          sampleRate: 16000,
-          numChannels: 1,      // mono — matches server expectation
-          noiseSuppress: true, // enables Android NoiseSuppressor / iOS equivalent
-        ),
+        const RecordConfig(encoder: AudioEncoder.wav, sampleRate: 44100, numChannels: 1, noiseSuppress: true),
         path: outputPath,
       );
 
@@ -96,10 +97,7 @@ class WhisperService {
       // Recording time (or early cancel)
       //----------------------
       _cancelCompleter = Completer<void>();
-      await Future.any([
-        Future.delayed(const Duration(seconds: 15)),
-        _cancelCompleter!.future,
-      ]);
+      await Future.any([Future.delayed(const Duration(seconds: 10)), _cancelCompleter!.future]);
       final wasCancelled = _cancelCompleter!.isCompleted;
       _cancelCompleter = null;
 
@@ -126,75 +124,24 @@ class WhisperService {
     }
   }
 
-  /// Uploads a recorded audio file to a Python server for identification.
-  ///
-  /// Expected server behavior (flexible):
-  /// - Accepts `multipart/form-data` with field [fileField] (default: `file`).
-  /// - Returns JSON. Common keys we try to read: `title`, `artist`, `confidence`.
-  Future<SongIdentificationResult> identifySongFromFile({
-    required String filePath,
-    required Uri endpoint,
-    String fileField = 'file',
-    Map<String, String>? extraFields,
-    Map<String, String>? headers,
-    Duration timeout = const Duration(seconds: 60),
-  }) async {
-    final file = File(filePath);
-    final exists = await file.exists();
-    if (!exists) {
+  Future<SongIdentificationResult> identifySongFromFile({required String filePath}) async {
+    final File file = File(filePath);
+    if (!await file.exists()) {
       return const SongIdentificationResult.failure('Recorded file not found.');
     }
 
+    final RecognitionCancellationToken token = RecognitionCancellationToken();
+    _activeRecognitionToken = token;
     try {
-      print('📤 Uploading file: $filePath');
-      print('📍 Endpoint: $endpoint');
-      print('📝 Field name: $fileField');
-      
-      final request = http.MultipartRequest('POST', endpoint);
-      if (headers != null) {
-        request.headers.addAll(headers);
-      }
-      if (extraFields != null) {
-        request.fields.addAll(extraFields);
-      }
-
-      request.files.add(await http.MultipartFile.fromPath(fileField, filePath));
-      
-      print('📦 File size: ${await file.length()} bytes');
-
-      final streamedResponse = await request.send().timeout(timeout);
-      final response = await http.Response.fromStream(streamedResponse);
-
-      print('📥 Response status: ${response.statusCode}');
-      print('📥 Response body: ${response.body}');
-
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        return SongIdentificationResult.failure(
-          'Server error (${response.statusCode}): ${response.body.isNotEmpty ? response.body : 'No body'}',
-        );
-      }
-
-      final decoded = jsonDecode(response.body);
-      if (decoded is! Map<String, dynamic>) {
-        return const SongIdentificationResult.failure('Unexpected server response (not a JSON object).');
-      }
-
-      final title = decoded['title']?.toString();
-      final artist = decoded['artist']?.toString();
-      final confidenceRaw = decoded['confidence'];
-      final confidence =
-          confidenceRaw is num ? confidenceRaw.toDouble() : double.tryParse(confidenceRaw?.toString() ?? '');
-
-      return SongIdentificationResult.success(title: title, artist: artist, confidence: confidence, raw: decoded);
-    } catch (e) {
-      print('❌ Upload error: $e');
-      return SongIdentificationResult.failure('Upload failed: $e');
+      final SongIdentificationResult result = await _orchestrator.identify(
+        filePath: filePath,
+        cancellationToken: token,
+      );
+      return result;
     } finally {
-      // Delete the local recording after upload (success or failure) to avoid accumulating WAV files
-      try {
-        final f = File(filePath);
-        if (await f.exists()) await f.delete();
-      } catch (_) {}
+      if (identical(_activeRecognitionToken, token)) {
+        _activeRecognitionToken = null;
+      }
     }
   }
 
