@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vespera/colors.dart';
+import 'package:vespera/components/appbar_profile_avatar.dart';
 import 'package:vespera/components/home_screen_lib_item.dart';
 import 'package:vespera/components/home_screen_rec_item.dart';
 import 'package:vespera/components/song_recommendation_item.dart';
@@ -26,23 +27,9 @@ class _HomeScreenState extends State<HomeScreen> {
   final PlaylistService _playlistService = PlaylistService();
   final RecommendationService _recommendationService = RecommendationService();
 
-  @override
-  void initState() {
-    super.initState();
-    // Load user data only if not already loaded
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-      if (userProvider.username == 'User') {
-        userProvider.loadUserData();
-      }
-    });
-  }
-
+  // Clear user provider data and sign out
   Future<void> _handleSignOut() async {
-    // Clear user provider data
     Provider.of<UserProvider>(context, listen: false).clearUserData();
-
-    // Sign out from AuthService
     await AuthService().signOut();
   }
 
@@ -84,13 +71,18 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
         backgroundColor: AppColors.backgroundDark,
-        title: Text(
-          'Hello $capitalizedUsername',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-            color: AppColors.textMuted,
-          ),
+        title: Row(
+          children: [
+            const AppBarProfileAvatar(),
+            Text(
+              'Hello $capitalizedUsername',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: AppColors.textMuted,
+              ),
+            ),
+          ],
         ),
         actions: [
           Container(
@@ -107,8 +99,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               onSelected: (String value) {
-                if (value == 'signOut') {
-                  _handleSignOut();
+                switch (value) {
+                  case 'signOut':
+                    _handleSignOut();
+                    break;
                 }
               },
               itemBuilder:
@@ -128,6 +122,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    
+      
       body: SingleChildScrollView(
         child: Column(
           children: [

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
+import 'package:vespera/components/appbar_profile_avatar.dart';
 import 'package:vespera/models/song.dart';
 import 'package:vespera/services/audio_service.dart';
 import 'package:vespera/services/search_service.dart';
@@ -104,9 +105,14 @@ class _SearchScreenState extends State<SearchScreen> {
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
         backgroundColor: AppColors.backgroundDark,
-        title: const Text(
-          ' Search',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: AppColors.textPrimary),
+        title: const Row(
+          children: [
+            AppBarProfileAvatar(),
+            Text(
+              'Search',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: AppColors.textPrimary),
+            ),
+          ],
         ),
         
         // -----------------------------------------

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
+import 'package:vespera/components/appbar_profile_avatar.dart';
 import 'package:vespera/components/create_playlist_modal.dart';
 import 'package:vespera/helpers/app_notification.dart';
 import 'package:vespera/screens/playlist_detail_screen.dart';
@@ -37,9 +38,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
         backgroundColor: AppColors.backgroundDark,
-        title: const Text(
-          'Your Library',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: AppColors.textPrimary),
+        title: const Row(
+          children: [
+            AppBarProfileAvatar(),
+            Text(
+              'Your Library',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: AppColors.textPrimary),
+            ),
+          ],
         ),
         actions: [
           Row(
@@ -162,6 +168,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     String playlistId = playlist.id;
                     String name = playlistData['name'] ?? 'Untitled';
                     String imageURL = playlistData['imageURL'] ?? 'err';
+                    final imageUri = Uri.tryParse(imageURL);
+                    final isNetworkImage =
+                      imageUri != null &&
+                      (imageUri.scheme == 'http' || imageUri.scheme == 'https') &&
+                      imageUri.host.isNotEmpty;
 
                     return Container(
                       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -260,7 +271,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                             height: 60,
                                             fit: BoxFit.cover,
                                           )
-                                        : Image.network(
+                                        : isNetworkImage
+                                        ? Image.network(
+                                            imageURL,
+                                            width: 60,
+                                            height: 60,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return Image.asset(
+                                                'assets/errorLoading.jpg',
+                                                width: 60,
+                                                height: 60,
+                                                fit: BoxFit.cover,
+                                              );
+                                            },
+                                          )
+                                        : Image.asset(
                                             imageURL,
                                             width: 60,
                                             height: 60,
