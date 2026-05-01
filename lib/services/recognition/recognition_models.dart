@@ -126,6 +126,8 @@ class SongIdentificationResult {
   final String? title;
   final String? artist;
   final double? confidence;
+  final int? matchCount;
+  final int? queriedPeakCount;
   final Map<String, dynamic>? raw;
   final String? error;
   final RecognitionMetrics? metrics;
@@ -135,6 +137,8 @@ class SongIdentificationResult {
     required this.title,
     required this.artist,
     required this.confidence,
+    required this.matchCount,
+    required this.queriedPeakCount,
     required this.raw,
     required this.error,
     required this.metrics,
@@ -144,6 +148,8 @@ class SongIdentificationResult {
     String? title,
     String? artist,
     double? confidence,
+    int? matchCount,
+    int? queriedPeakCount,
     Map<String, dynamic>? raw,
     RecognitionMetrics? metrics,
   }) : this._(
@@ -151,6 +157,8 @@ class SongIdentificationResult {
          title: title,
          artist: artist,
          confidence: confidence,
+         matchCount: matchCount,
+         queriedPeakCount: queriedPeakCount,
          raw: raw,
          error: null,
          metrics: metrics,
@@ -164,6 +172,8 @@ class SongIdentificationResult {
          title: null,
          artist: null,
          confidence: null,
+         matchCount: null,
+         queriedPeakCount: null,
          raw: null,
          error: message,
          metrics: metrics,

@@ -4,10 +4,21 @@ import 'dart:developer';
 import 'dart:io';
 import 'dart:math' show max;
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:vespera/services/recognition/peak_extractor.dart';
 import 'package:vespera/services/recognition/recognition_config.dart';
 import 'package:vespera/services/recognition/recognition_models.dart';
+
+int? _toInt(Object? value) {
+  if (value is int) {
+    return value;
+  }
+  if (value is num) {
+    return value.toInt();
+  }
+  return int.tryParse(value?.toString() ?? '');
+}
 
 class RecognitionCancellationToken {
   final Completer<void> _completer = Completer<void>();
@@ -165,6 +176,7 @@ class PeakBasedRecognizer implements SongRecognizer {
           }
 
           final dynamic decoded = jsonDecode(response.body);
+          debugPrint('🔍 Backend peak response: $decoded');
           if (decoded is! Map<String, dynamic>) {
             apiSw.stop();
             totalSw.stop();
@@ -186,6 +198,7 @@ class PeakBasedRecognizer implements SongRecognizer {
                   ? confidenceRaw.toDouble()
                   : double.tryParse(confidenceRaw?.toString() ?? '');
           final int? matchCount = _toInt(decoded['match_count']);
+          final int? queriedPeakCount = _toInt(decoded['queried_peak_count']);
           final bool success = decoded['success'] == true;
           final String? title = decoded['title']?.toString();
           final String? artist = decoded['artist']?.toString();
@@ -224,6 +237,8 @@ class PeakBasedRecognizer implements SongRecognizer {
             title: title,
             artist: artist,
             confidence: confidence,
+            matchCount: matchCount,
+            queriedPeakCount: queriedPeakCount,
             raw: decoded,
             metrics: RecognitionMetrics(
               requestBytes: bodyBytes.length,
@@ -313,17 +328,6 @@ class PeakBasedRecognizer implements SongRecognizer {
     };
     log(jsonEncode(payload), name: 'vespera.recognition');
   }
-
-  int? _toInt(Object? value) {
-    if (value is int) {
-      return value;
-    }
-    if (value is num) {
-      return value.toInt();
-    }
-    return int.tryParse(value?.toString() ?? '');
-  }
-
   String? _peakAcceptanceError({
     required bool success,
     required String? title,
@@ -418,6 +422,7 @@ class AudioUploadRecognizer implements SongRecognizer {
       }
 
       final dynamic decoded = jsonDecode(response.body);
+      debugPrint('🔍 Backend audio response: $decoded');
       if (decoded is! Map<String, dynamic>) {
         return SongIdentificationResult.failure(
           'Unexpected server response (not a JSON object).',
@@ -437,6 +442,9 @@ class AudioUploadRecognizer implements SongRecognizer {
               ? confidenceRaw.toDouble()
               : double.tryParse(confidenceRaw?.toString() ?? '');
 
+      final int? matchCount = _toInt(decoded['match_count']);
+      final int? queriedPeakCount = _toInt(decoded['queried_peak_count']);
+
       log(
         jsonEncode(<String, Object?>{
           'event': 'audio_upload_success',
@@ -451,6 +459,8 @@ class AudioUploadRecognizer implements SongRecognizer {
         title: decoded['title']?.toString(),
         artist: decoded['artist']?.toString(),
         confidence: confidence,
+        matchCount: matchCount,
+        queriedPeakCount: queriedPeakCount,
         raw: decoded,
         metrics: RecognitionMetrics(
           requestBytes: requestSize,

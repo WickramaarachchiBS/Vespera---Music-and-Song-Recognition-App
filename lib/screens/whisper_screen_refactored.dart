@@ -80,7 +80,12 @@ class _WhisperScreenState extends State<WhisperScreen> with TickerProviderStateM
     if (result.isCancelled) return;
 
     if (result.isSuccess && result.song != null) {
-      IdentifiedSongWithPlaylistModal.show(context, song: result.song!, confidence: result.confidence);
+      IdentifiedSongWithPlaylistModal.show(
+        context,
+        song: result.song!,
+        matchCount: result.matchCount,
+        queriedPeakCount: result.queriedPeakCount,
+      );
     } else if (result.errorMessage != null) {
       _showSnackBar(result.errorMessage!, duration: result.isNotInDatabase ? 4 : 3);
     }

@@ -113,7 +113,13 @@ class _DiscoveredSongCard extends StatelessWidget {
               final matchedSong = await provider.searchDiscoveredSongInFirebase(song.title);
 
               if (matchedSong != null && context.mounted) {
-                IdentifiedSongWithPlaylistModal.show(context, song: matchedSong, confidence: song.confidence);
+                IdentifiedSongWithPlaylistModal.show(
+                  context,
+                  song: matchedSong,
+                  confidence: song.confidence,
+                  matchCount: song.matchCount,
+                  queriedPeakCount: song.queriedPeakCount,
+                );
               } else {
                 onShowSnackBar('Song not found in database. Cannot add to playlist.');
               }
@@ -188,7 +194,7 @@ class _DiscoveredSongCard extends StatelessWidget {
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            if (song.confidence != null) ...[
+                            if (song.matchCount != null || song.confidence != null) ...[
                               const SizedBox(width: 12),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -197,7 +203,11 @@ class _DiscoveredSongCard extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
-                                  '${(song.confidence! * 100).toStringAsFixed(0)}%',
+                                  song.matchCount != null
+                                      ? song.queriedPeakCount != null
+                                          ? '${song.matchCount}/${song.queriedPeakCount} matches'
+                                          : '${song.matchCount}/100 matches'
+                                      : '${(song.confidence! * 100).toStringAsFixed(0)}%',
                                   style: TextStyle(
                                     color: AppColors.accentBlue,
                                     fontSize: 11,

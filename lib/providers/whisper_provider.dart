@@ -104,6 +104,8 @@ class WhisperProvider extends ChangeNotifier {
         title: matchedSong.title,
         artist: matchedSong.artist,
         confidence: identify.confidence,
+        matchCount: identify.matchCount,
+        queriedPeakCount: identify.queriedPeakCount,
         imageUrl: matchedSong.imageUrl,
         audioUrl: matchedSong.audioUrl,
       );
@@ -114,7 +116,12 @@ class WhisperProvider extends ChangeNotifier {
       _statusMessage = null;
       notifyListeners();
 
-      return SongRecognitionResult.success(matchedSong, identify.confidence);
+      return SongRecognitionResult.success(
+        matchedSong,
+        identify.confidence,
+        matchCount: identify.matchCount,
+        queriedPeakCount: identify.queriedPeakCount,
+      );
     } else {
       _state = ListeningState.idle;
       _statusMessage = 'Not found in database. Search again.';
@@ -221,6 +228,8 @@ class WhisperProvider extends ChangeNotifier {
 class SongRecognitionResult {
   final Song? song;
   final double? confidence;
+  final int? matchCount;
+  final int? queriedPeakCount;
   final String? errorMessage;
   final bool isSuccess;
   final bool isNotInDatabase;
@@ -228,17 +237,35 @@ class SongRecognitionResult {
   const SongRecognitionResult._({
     this.song,
     this.confidence,
+    this.matchCount,
+    this.queriedPeakCount,
     this.errorMessage,
     required this.isSuccess,
     required this.isNotInDatabase,
   });
 
-  factory SongRecognitionResult.success(Song song, double? confidence) {
-    return SongRecognitionResult._(song: song, confidence: confidence, isSuccess: true, isNotInDatabase: false);
+  factory SongRecognitionResult.success(
+    Song song,
+    double? confidence, {
+    int? matchCount,
+    int? queriedPeakCount,
+  }) {
+    return SongRecognitionResult._(
+      song: song,
+      confidence: confidence,
+      matchCount: matchCount,
+      queriedPeakCount: queriedPeakCount,
+      isSuccess: true,
+      isNotInDatabase: false,
+    );
   }
 
   factory SongRecognitionResult.notFoundInDatabase(String title, String artist) {
     return SongRecognitionResult._(
+      song: null,
+      confidence: null,
+      matchCount: null,
+      queriedPeakCount: null,
       errorMessage: 'Song "$title" identified but not found in database.',
       isSuccess: false,
       isNotInDatabase: true,
@@ -246,11 +273,11 @@ class SongRecognitionResult {
   }
 
   factory SongRecognitionResult.error(String message) {
-    return SongRecognitionResult._(errorMessage: message, isSuccess: false, isNotInDatabase: false);
+    return SongRecognitionResult._(song: null, confidence: null, matchCount: null, queriedPeakCount: null, errorMessage: message, isSuccess: false, isNotInDatabase: false);
   }
 
   factory SongRecognitionResult.cancelled() {
-    return const SongRecognitionResult._(isSuccess: false, isNotInDatabase: false);
+    return const SongRecognitionResult._(song: null, confidence: null, matchCount: null, queriedPeakCount: null, errorMessage: null, isSuccess: false, isNotInDatabase: false);
   }
 
   bool get isCancelled => !isSuccess && errorMessage == null && !isNotInDatabase;
