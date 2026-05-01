@@ -121,22 +121,11 @@ class PeakBasedRecognizer implements SongRecognizer {
         headers['Content-Encoding'] = 'gzip';
       }
 
-      final List<Map<String, int>> first20Peaks = extraction.peaks
-          .take(20)
-          .map(
-            (AudioPeak p) => <String, int>{
-              'freq_idx': p.freqIdx,
-              'time_idx': p.timeIdx,
-            },
-          )
-          .toList(growable: false);
-
       _logStructured('peak_request_built', <String, Object?>{
         'request_bytes': bodyBytes.length,
         'raw_json_bytes': jsonBytes.length,
         'preprocessing_ms': extraction.preprocessingDuration.inMilliseconds,
         'peak_count': extraction.peaks.length,
-        'first_20_peaks': first20Peaks,
         'source_sample_rate_hz': extraction.sourceSampleRate,
         'output_sample_rate_hz': extraction.outputSampleRate,
       });

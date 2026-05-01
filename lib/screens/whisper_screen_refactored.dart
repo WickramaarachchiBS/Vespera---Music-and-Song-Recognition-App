@@ -247,11 +247,28 @@ class _WhisperScreenState extends State<WhisperScreen> with TickerProviderStateM
     return Consumer<WhisperProvider>(
       builder: (context, provider, child) {
         final isListening = provider.state == ListeningState.listening;
+        final isProcessing = provider.state == ListeningState.processing;
+        final statusMessage = provider.statusMessage;
+
+        String displayText;
+        Color textColor = Colors.white.withOpacity(0.8);
+
+        if (isListening) {
+          displayText = 'Listening...';
+        } else if (isProcessing) {
+          displayText = 'Processing...';
+          textColor = Colors.white.withOpacity(0.7);
+        } else if (statusMessage != null) {
+          displayText = statusMessage;
+          textColor = Colors.orange.withOpacity(0.8); // Warning color for errors/no matches
+        } else {
+          displayText = 'Tap to identify music';
+        }
 
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
           child: AnimatedBuilder(
-            key: ValueKey(isListening),
+            key: ValueKey(displayText),
             animation: _textFadeAnimation,
             builder: (context, child) {
               return Opacity(
@@ -260,13 +277,14 @@ class _WhisperScreenState extends State<WhisperScreen> with TickerProviderStateM
               );
             },
             child: Text(
-              isListening ? 'Listening...' : 'Tap to identify music',
+              displayText,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
+                color: textColor,
                 fontSize: 20,
                 fontWeight: FontWeight.w400,
                 letterSpacing: 1,
               ),
+              textAlign: TextAlign.center,
             ),
           ),
         );

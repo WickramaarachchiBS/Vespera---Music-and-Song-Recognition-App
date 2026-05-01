@@ -97,7 +97,7 @@ class WhisperService {
       // Recording time (or early cancel)
       //----------------------
       _cancelCompleter = Completer<void>();
-      await Future.any([Future.delayed(const Duration(seconds: 10)), _cancelCompleter!.future]);
+      await Future.any([Future.delayed(const Duration(seconds: 12)), _cancelCompleter!.future]);
       final wasCancelled = _cancelCompleter!.isCompleted;
       _cancelCompleter = null;
 

@@ -5,7 +5,7 @@ import 'package:vespera/services/discovered_songs_service.dart';
 import 'package:vespera/services/search_service.dart';
 import 'package:vespera/services/whisper_services.dart';
 
-enum ListeningState { idle, listening }
+enum ListeningState { idle, listening, processing }
 
 class WhisperProvider extends ChangeNotifier {
   final WhisperService _whisperService = WhisperService();
@@ -15,11 +15,14 @@ class WhisperProvider extends ChangeNotifier {
   ListeningState _state = ListeningState.idle;
   List<DiscoveredSong> _discoveredSongs = [];
   String? _lastSavedPath;
+  String? _statusMessage;
 
   ListeningState get state => _state;
   List<DiscoveredSong> get discoveredSongs => _discoveredSongs;
   String? get lastSavedPath => _lastSavedPath;
+  String? get statusMessage => _statusMessage;
   bool get isListening => _state == ListeningState.listening;
+  bool get isProcessing => _state == ListeningState.processing;
 
   WhisperProvider() {
     loadDiscoveredSongs();
@@ -36,18 +39,28 @@ class WhisperProvider extends ChangeNotifier {
     }
 
     _state = ListeningState.listening;
+    _statusMessage = null;
     notifyListeners();
 
     final result = await _whisperService.startTenSecondRecording();
 
-    _state = ListeningState.idle;
-    notifyListeners();
+    if (result.failure != null) {
+      _state = ListeningState.idle;
+      _statusMessage = _getRecordingErrorMessage(result.failure);
+      notifyListeners();
+    } else {
+      _state = ListeningState.processing;
+      _statusMessage = 'Processing...';
+      notifyListeners();
+    }
 
+    // Result will be handled in the status message above
     if (result.failure == WhisperRecordingFailure.permissionDenied) {
       return SongRecognitionResult.error('Microphone permission is required to record audio.');
     }
 
     if (result.failure == WhisperRecordingFailure.cancelled) {
+      _statusMessage = null;
       return SongRecognitionResult.cancelled();
     }
 
@@ -65,6 +78,9 @@ class WhisperProvider extends ChangeNotifier {
     final identify = await _whisperService.identifySongFromFile(filePath: _lastSavedPath!);
 
     if (!identify.ok) {
+      _state = ListeningState.idle;
+      _statusMessage = _getRecognitionErrorMessage(identify.error);
+      notifyListeners();
       return SongRecognitionResult.error(identify.error ?? 'Song identification failed.');
     }
 
@@ -73,6 +89,9 @@ class WhisperProvider extends ChangeNotifier {
 
     // Don't process songs with unknown title
     if (title.toLowerCase() == 'unknown title') {
+      _state = ListeningState.idle;
+      _statusMessage = 'No matches. Try again.';
+      notifyListeners();
       return SongRecognitionResult.error('Could not identify song. Please try again.');
     }
 
@@ -91,9 +110,15 @@ class WhisperProvider extends ChangeNotifier {
 
       await _discoveredSongsService.addDiscoveredSong(discoveredSong);
       await loadDiscoveredSongs();
+      _state = ListeningState.idle;
+      _statusMessage = null;
+      notifyListeners();
 
       return SongRecognitionResult.success(matchedSong, identify.confidence);
     } else {
+      _state = ListeningState.idle;
+      _statusMessage = 'Not found in database. Search again.';
+      notifyListeners();
       return SongRecognitionResult.notFoundInDatabase(title, artist);
     }
   }
@@ -142,6 +167,48 @@ class WhisperProvider extends ChangeNotifier {
 
   void cancelRecording() {
     _whisperService.cancelRecording();
+    _state = ListeningState.idle;
+    _statusMessage = null;
+    notifyListeners();
+  }
+
+  String? _getRecordingErrorMessage(WhisperRecordingFailure? failure) {
+    switch (failure) {
+      case WhisperRecordingFailure.permissionDenied:
+        return 'Microphone permission required.';
+      case WhisperRecordingFailure.alreadyRecording:
+        return 'Already recording.';
+      case WhisperRecordingFailure.failed:
+        return 'Recording failed. Try again.';
+      case WhisperRecordingFailure.cancelled:
+        return null;
+      case null:
+        return null;
+    }
+  }
+
+  String _getRecognitionErrorMessage(String? error) {
+    if (error == null) return 'Identification failed. Try again.';
+    
+    final lowerError = error.toLowerCase();
+    
+    if (lowerError.contains('too short')) {
+      return 'Audio is too short. Record at least 8 seconds.';
+    }
+    if (lowerError.contains('timeout')) {
+      return 'Request timed out. Check your connection.';
+    }
+    if (lowerError.contains('no match') || lowerError.contains('not found')) {
+      return 'No matches found. Try again.';
+    }
+    if (lowerError.contains('permission')) {
+      return 'Permission denied. Try again.';
+    }
+    if (lowerError.contains('network') || lowerError.contains('connection')) {
+      return 'Network error. Check your connection.';
+    }
+    
+    return 'No matches. Try again.';
   }
 
   @override

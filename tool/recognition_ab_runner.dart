@@ -6,7 +6,7 @@ import 'package:vespera/services/recognition/recognition_models.dart';
 import 'package:vespera/services/recognition/recognizers.dart';
 
 Future<void> main(List<String> args) async {
-  final _Args parsed = _Args.parse(args);
+  final _Args? parsed = _Args.parse(args);
   if (parsed == null) {
     _printUsage();
     exitCode = 64;
