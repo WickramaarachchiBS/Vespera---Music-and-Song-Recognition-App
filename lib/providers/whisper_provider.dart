@@ -35,6 +35,7 @@ class WhisperProvider extends ChangeNotifier {
 
   Future<SongRecognitionResult> startRecordingAndIdentify() async {
     if (_state == ListeningState.listening) {
+      debugPrint('WhisperProvider: startRecordingAndIdentify called but already listening');
       return SongRecognitionResult.error('Already recording');
     }
 
@@ -47,6 +48,7 @@ class WhisperProvider extends ChangeNotifier {
     if (result.failure != null) {
       _state = ListeningState.idle;
       _statusMessage = _getRecordingErrorMessage(result.failure);
+      debugPrint('WhisperProvider: recording failure=${result.failure}, statusMessage=$_statusMessage');
       notifyListeners();
     } else {
       _state = ListeningState.processing;
@@ -56,6 +58,7 @@ class WhisperProvider extends ChangeNotifier {
 
     // Result will be handled in the status message above
     if (result.failure == WhisperRecordingFailure.permissionDenied) {
+      debugPrint('WhisperProvider: permission denied when recording');
       return SongRecognitionResult.error('Microphone permission is required to record audio.');
     }
 
@@ -65,12 +68,14 @@ class WhisperProvider extends ChangeNotifier {
     }
 
     if (result.failure == WhisperRecordingFailure.failed) {
+      debugPrint('WhisperProvider: recording failed (internal failure)');
       return SongRecognitionResult.error('Recording failed.');
     }
 
     _lastSavedPath = result.savedPath;
 
     if (_lastSavedPath == null) {
+      debugPrint('WhisperProvider: no audio saved after recording');
       return SongRecognitionResult.error('No audio recorded.');
     }
 
@@ -80,6 +85,7 @@ class WhisperProvider extends ChangeNotifier {
     if (!identify.ok) {
       _state = ListeningState.idle;
       _statusMessage = _getRecognitionErrorMessage(identify.error);
+      debugPrint('WhisperProvider: identification failed, service error="${identify.error}", statusMessage="$_statusMessage"');
       notifyListeners();
       return SongRecognitionResult.error(identify.error ?? 'Song identification failed.');
     }
@@ -91,6 +97,7 @@ class WhisperProvider extends ChangeNotifier {
     if (title.toLowerCase() == 'unknown title') {
       _state = ListeningState.idle;
       _statusMessage = 'No matches. Try again.';
+      debugPrint('WhisperProvider: identified title is Unknown title - aborting');
       notifyListeners();
       return SongRecognitionResult.error('Could not identify song. Please try again.');
     }
@@ -125,6 +132,7 @@ class WhisperProvider extends ChangeNotifier {
     } else {
       _state = ListeningState.idle;
       _statusMessage = 'Not found in database. Search again.';
+      debugPrint('WhisperProvider: song not found in database for title="$title", artist="$artist"');
       notifyListeners();
       return SongRecognitionResult.notFoundInDatabase(title, artist);
     }
@@ -182,10 +190,13 @@ class WhisperProvider extends ChangeNotifier {
   String? _getRecordingErrorMessage(WhisperRecordingFailure? failure) {
     switch (failure) {
       case WhisperRecordingFailure.permissionDenied:
+        debugPrint('WhisperProvider: recording error -> permissionDenied');
         return 'Microphone permission required.';
       case WhisperRecordingFailure.alreadyRecording:
+        debugPrint('WhisperProvider: recording error -> alreadyRecording');
         return 'Already recording.';
       case WhisperRecordingFailure.failed:
+        debugPrint('WhisperProvider: recording error -> failed');
         return 'Recording failed. Try again.';
       case WhisperRecordingFailure.cancelled:
         return null;
@@ -195,27 +206,30 @@ class WhisperProvider extends ChangeNotifier {
   }
 
   String _getRecognitionErrorMessage(String? error) {
-    if (error == null) return 'Identification failed. Try again.';
-    
+    if (error == null) {
+      debugPrint('WhisperProvider: recognition error -> null');
+      return 'Identification failed. Try again.';
+    }
+
     final lowerError = error.toLowerCase();
-    
+    String message;
+
     if (lowerError.contains('too short')) {
-      return 'Audio is too short. Record at least 8 seconds.';
+      message = 'Audio is too short. Record at least 8 seconds.';
+    } else if (lowerError.contains('timeout')) {
+      message = 'Request timed out. Check your connection.';
+    } else if (lowerError.contains('no match') || lowerError.contains('not found')) {
+      message = 'No matches found. Try again.';
+    } else if (lowerError.contains('permission')) {
+      message = 'Permission denied. Try again.';
+    } else if (lowerError.contains('network') || lowerError.contains('connection')) {
+      message = 'Network error. Check your connection.';
+    } else {
+      message = 'No matches. Try again.';
     }
-    if (lowerError.contains('timeout')) {
-      return 'Request timed out. Check your connection.';
-    }
-    if (lowerError.contains('no match') || lowerError.contains('not found')) {
-      return 'No matches found. Try again.';
-    }
-    if (lowerError.contains('permission')) {
-      return 'Permission denied. Try again.';
-    }
-    if (lowerError.contains('network') || lowerError.contains('connection')) {
-      return 'Network error. Check your connection.';
-    }
-    
-    return 'No matches. Try again.';
+
+    debugPrint('WhisperProvider: recognition service error="$error" -> userMessage="$message"');
+    return message;
   }
 
   @override
