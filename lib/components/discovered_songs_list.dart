@@ -102,8 +102,9 @@ class _DiscoveredSongCard extends StatelessWidget {
           child: const Icon(Icons.delete, color: Colors.white, size: 28),
         ),
         onDismissed: (direction) async {
+          debugPrint('🗑️ Removing discovered song: ${song.title}');
           await provider.removeDiscoveredSong(index);
-          onShowSnackBar('Song removed');
+          onShowSnackBar('Removed');
         },
         child: Material(
           color: Colors.transparent,
@@ -121,7 +122,8 @@ class _DiscoveredSongCard extends StatelessWidget {
                   queriedPeakCount: song.queriedPeakCount,
                 );
               } else {
-                onShowSnackBar('Song not found in database. Cannot add to playlist.');
+                debugPrint('❌ Song not found in database: ${song.title}');
+                onShowSnackBar('Not in database');
               }
             },
             child: Padding(

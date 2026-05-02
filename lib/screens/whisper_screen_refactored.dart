@@ -86,21 +86,11 @@ class _WhisperScreenState extends State<WhisperScreen> with TickerProviderStateM
         matchCount: result.matchCount,
         queriedPeakCount: result.queriedPeakCount,
       );
-    } else if (result.errorMessage != null) {
-      _showSnackBar(result.errorMessage!, duration: result.isNotInDatabase ? 4 : 3);
     }
+    // Errors displayed inline via statusMessage in _buildStatusText()
   }
 
-  void _showSnackBar(String message, {int duration = 3}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: Duration(seconds: duration),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -264,7 +254,8 @@ class _WhisperScreenState extends State<WhisperScreen> with TickerProviderStateM
           displayText = 'Processing...';
           textColor = Colors.white.withOpacity(0.7);
         } else if (statusMessage != null) {
-          displayText = statusMessage;
+          // Show minimal inline feedback; full error in terminal via debugPrint
+          displayText = _getMinimalStatusText(statusMessage);
           textColor = Colors.orange.withOpacity(0.8); // Warning color for errors/no matches
         } else {
           displayText = 'Tap to identify music';
@@ -295,6 +286,26 @@ class _WhisperScreenState extends State<WhisperScreen> with TickerProviderStateM
         );
       },
     );
+  }
+
+  /// Minimal snackbar - just logs to terminal, no UI popup.
+  void _showSnackBar(String message, {int duration = 2}) {
+    debugPrint('🎵 WhisperScreen: $message');
+  }
+
+  /// Converts verbose status messages to minimal inline feedback.
+  String _getMinimalStatusText(String statusMessage) {
+    final lower = statusMessage.toLowerCase();
+    
+    if (lower.contains('not found')) return 'Not found. Try again';
+    if (lower.contains('no matches')) return 'No match. Try another song';
+    if (lower.contains('too short')) return 'Audio clip too short';
+    if (lower.contains('timeout')) return 'Request timeout. Try again';
+    if (lower.contains('permission')) return 'Permission denied. Allow microphone access';
+    if (lower.contains('network') || lower.contains('connection')) return 'Network error. Check your connection';
+    if (lower.contains('failed')) return 'Failed. Try again';
+    
+    return 'Try again';
   }
 
   Widget _buildDraggableSheet() {

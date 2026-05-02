@@ -39,7 +39,7 @@ class RecognitionConfig {
     this.maxPeaks = 3500,
     this.minDurationSeconds = 8.0,
     this.maxDurationSeconds = 15.0,
-    this.minPeakMatchCountForAcceptance = 5,
+    this.minPeakMatchCountForAcceptance = 10,
     this.minPeakConfidenceForAcceptance = 0.0,
     this.schemaVersion = '1.0',
     this.appVersion = '1.0.0',
@@ -48,7 +48,7 @@ class RecognitionConfig {
   static RecognizerMode modeFromEnvironment() {
     const String raw = String.fromEnvironment(
       'VESPER_RECOGNIZER_MODE',
-      defaultValue: 'peak_only',
+      defaultValue: 'peak_primary',
     );
     switch (raw.trim().toLowerCase()) {
       case 'audio_only':
