@@ -18,7 +18,9 @@ class _WhisperScreenState extends State<WhisperScreen> with TickerProviderStateM
   late AnimationController _pulseController;
   late AnimationController _rippleController;
   late AnimationController _glowController;
+  late AnimationController _textFadeController;
   late Animation<double> _pulseAnimation;
+  late Animation<double> _textFadeAnimation;
 
   @override
   void initState() {
@@ -37,6 +39,12 @@ class _WhisperScreenState extends State<WhisperScreen> with TickerProviderStateM
 
     _rippleController = AnimationController(duration: const Duration(milliseconds: 2000), vsync: this);
     _glowController = AnimationController(duration: const Duration(milliseconds: 1500), vsync: this);
+
+    _textFadeController = AnimationController(duration: const Duration(milliseconds: 1200), vsync: this)
+      ..repeat(reverse: true);
+    _textFadeAnimation = Tween<double>(begin: 0.4, end: 1.0).animate(
+      CurvedAnimation(parent: _textFadeController, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -45,13 +53,17 @@ class _WhisperScreenState extends State<WhisperScreen> with TickerProviderStateM
     _pulseController.dispose();
     _rippleController.dispose();
     _glowController.dispose();
+    _textFadeController.dispose();
     super.dispose();
   }
 
   Future<void> _handleRecording() async {
     final provider = Provider.of<WhisperProvider>(context, listen: false);
 
-    if (provider.isListening) return;
+    if (provider.isListening) {
+      provider.cancelRecording();
+      return;
+    }
 
     _rippleController.repeat();
     _glowController.repeat(reverse: true);
@@ -65,23 +77,20 @@ class _WhisperScreenState extends State<WhisperScreen> with TickerProviderStateM
     _glowController.stop();
     _glowController.reset();
 
+    if (result.isCancelled) return;
+
     if (result.isSuccess && result.song != null) {
-      IdentifiedSongWithPlaylistModal.show(context, song: result.song!, confidence: result.confidence);
-    } else if (result.errorMessage != null) {
-      _showSnackBar(result.errorMessage!, duration: result.isNotInDatabase ? 4 : 3);
+      IdentifiedSongWithPlaylistModal.show(
+        context,
+        song: result.song!,
+        matchCount: result.matchCount,
+        queriedPeakCount: result.queriedPeakCount,
+      );
     }
+    // Errors displayed inline via statusMessage in _buildStatusText()
   }
 
-  void _showSnackBar(String message, {int duration = 3}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: Duration(seconds: duration),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -233,22 +242,70 @@ class _WhisperScreenState extends State<WhisperScreen> with TickerProviderStateM
     return Consumer<WhisperProvider>(
       builder: (context, provider, child) {
         final isListening = provider.state == ListeningState.listening;
+        final isProcessing = provider.state == ListeningState.processing;
+        final statusMessage = provider.statusMessage;
+
+        String displayText;
+        Color textColor = Colors.white.withOpacity(0.8);
+
+        if (isListening) {
+          displayText = 'Listening...';
+        } else if (isProcessing) {
+          displayText = 'Processing...';
+          textColor = Colors.white.withOpacity(0.7);
+        } else if (statusMessage != null) {
+          // Show minimal inline feedback; full error in terminal via debugPrint
+          displayText = _getMinimalStatusText(statusMessage);
+          textColor = Colors.orange.withOpacity(0.8); // Warning color for errors/no matches
+        } else {
+          displayText = 'Tap to identify music';
+        }
 
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
-          child: Text(
-            isListening ? 'Listening...' : 'Tap to identify music',
-            key: ValueKey(isListening),
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
-              fontSize: 20,
-              fontWeight: FontWeight.w400,
-              letterSpacing: 1,
+          child: AnimatedBuilder(
+            key: ValueKey(displayText),
+            animation: _textFadeAnimation,
+            builder: (context, child) {
+              return Opacity(
+                opacity: _textFadeAnimation.value,
+                child: child,
+              );
+            },
+            child: Text(
+              displayText,
+              style: TextStyle(
+                color: textColor,
+                fontSize: 20,
+                fontWeight: FontWeight.w400,
+                letterSpacing: 1,
+              ),
+              textAlign: TextAlign.center,
             ),
           ),
         );
       },
     );
+  }
+
+  /// Minimal snackbar - just logs to terminal, no UI popup.
+  void _showSnackBar(String message, {int duration = 2}) {
+    debugPrint('🎵 WhisperScreen: $message');
+  }
+
+  /// Converts verbose status messages to minimal inline feedback.
+  String _getMinimalStatusText(String statusMessage) {
+    final lower = statusMessage.toLowerCase();
+    
+    if (lower.contains('not found')) return 'Not found. Try again';
+    if (lower.contains('no matches')) return 'No match. Try another song';
+    if (lower.contains('too short')) return 'Audio clip too short';
+    if (lower.contains('timeout')) return 'Request timeout. Try again';
+    if (lower.contains('permission')) return 'Permission denied. Allow microphone access';
+    if (lower.contains('network') || lower.contains('connection')) return 'Network error. Check your connection';
+    if (lower.contains('failed')) return 'Failed. Try again';
+    
+    return 'Try again';
   }
 
   Widget _buildDraggableSheet() {

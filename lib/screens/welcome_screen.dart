@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:vespera/screens/signin_screen.dart';
-import 'package:vespera/screens/signup_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -26,7 +24,7 @@ class WelcomeScreen extends StatelessWidget {
                 // LOGO & TEXT
                 ClipOval(
                   child: Image.asset(
-                    'assets/app_icon.jpg',
+                    'assets/Logo.JPG',
                     height: 100,
                     width: 100,
                     fit: BoxFit.fill,
@@ -43,11 +41,7 @@ class WelcomeScreen extends StatelessWidget {
                 // SIGN UP BUTTON
                 ElevatedButton(
                   onPressed: () {
-                    // Navigate to sign up
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => SignUpScreen()),
-                    );
+                    Navigator.pushNamed(context, '/signUp');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFF1DA2B9),
@@ -69,10 +63,7 @@ class WelcomeScreen extends StatelessWidget {
                 // LOG IN BUTTON
                 OutlinedButton.icon(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => SignInScreen()),
-                    );
+                    Navigator.pushNamed(context, '/signIn');
                   },
                   label: Text('Log In'),
                   style: OutlinedButton.styleFrom(

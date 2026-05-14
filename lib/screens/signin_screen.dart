@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vespera/colors.dart';
+import 'package:vespera/helpers/app_notification.dart';
 import 'package:vespera/providers/user_provider.dart';
-import 'package:vespera/screens/signup_screen.dart';
 import 'package:vespera/services/auth_service.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -47,22 +47,14 @@ class _SignInScreenState extends State<SignInScreen> {
       if (mounted) {
         await Provider.of<UserProvider>(context, listen: false).loadUserData();
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Signed in successfully!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        AppNotification.showSuccess(context, 'Successfully signed in!');
 
-        // Navigate to home screen
-        Navigator.pushReplacementNamed(context, '/home');
+        // Return to root; AuthWrapper will render the correct screen from auth state.
+        Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
+        AppNotification.showError(context, 'Failed to sign in. Please check your credentials.');
       }
     } finally {
       if (mounted) {
@@ -119,7 +111,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   keyboardType: TextInputType.emailAddress,
                   style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    hintText: 'name@domain.com',
+                    hintText: 'Enter email address',
                     hintStyle: TextStyle(color: Colors.grey),
                     filled: true,
                     fillColor: Color(0xFF282828),
@@ -167,7 +159,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   obscureText: _obscurePassword,
                   style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    hintText: 'Enter your password',
+                    hintText: 'Enter password',
                     hintStyle: TextStyle(color: Colors.grey),
                     filled: true,
                     fillColor: Color(0xFF282828),
@@ -251,12 +243,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     Text("Don't have an account? ", style: TextStyle(color: Colors.grey)),
                     TextButton(
                       onPressed: () {
-                        // Navigate to signup
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => SignUpScreen()),
-                        );
+                        Navigator.pushReplacementNamed(context, '/signUp');
                       },
                       child: Text(
                         'Sign up',

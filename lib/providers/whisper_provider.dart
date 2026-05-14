@@ -5,7 +5,7 @@ import 'package:vespera/services/discovered_songs_service.dart';
 import 'package:vespera/services/search_service.dart';
 import 'package:vespera/services/whisper_services.dart';
 
-enum ListeningState { idle, listening }
+enum ListeningState { idle, listening, processing }
 
 class WhisperProvider extends ChangeNotifier {
   final WhisperService _whisperService = WhisperService();
@@ -15,14 +15,14 @@ class WhisperProvider extends ChangeNotifier {
   ListeningState _state = ListeningState.idle;
   List<DiscoveredSong> _discoveredSongs = [];
   String? _lastSavedPath;
+  String? _statusMessage;
 
   ListeningState get state => _state;
   List<DiscoveredSong> get discoveredSongs => _discoveredSongs;
   String? get lastSavedPath => _lastSavedPath;
+  String? get statusMessage => _statusMessage;
   bool get isListening => _state == ListeningState.listening;
-
-  // Configuration
-  static const String identifyEndpoint = 'http://192.168.1.80:8000/api/identify';
+  bool get isProcessing => _state == ListeningState.processing;
 
   WhisperProvider() {
     loadDiscoveredSongs();
@@ -35,39 +35,58 @@ class WhisperProvider extends ChangeNotifier {
 
   Future<SongRecognitionResult> startRecordingAndIdentify() async {
     if (_state == ListeningState.listening) {
+      debugPrint('WhisperProvider: startRecordingAndIdentify called but already listening');
       return SongRecognitionResult.error('Already recording');
     }
 
     _state = ListeningState.listening;
+    _statusMessage = null;
     notifyListeners();
 
     final result = await _whisperService.startTenSecondRecording();
 
-    _state = ListeningState.idle;
-    notifyListeners();
+    if (result.failure != null) {
+      _state = ListeningState.idle;
+      _statusMessage = _getRecordingErrorMessage(result.failure);
+      debugPrint('WhisperProvider: recording failure=${result.failure}, statusMessage=$_statusMessage');
+      notifyListeners();
+    } else {
+      _state = ListeningState.processing;
+      _statusMessage = 'Processing...';
+      notifyListeners();
+    }
 
+    // Result will be handled in the status message above
     if (result.failure == WhisperRecordingFailure.permissionDenied) {
+      debugPrint('WhisperProvider: permission denied when recording');
       return SongRecognitionResult.error('Microphone permission is required to record audio.');
     }
 
+    if (result.failure == WhisperRecordingFailure.cancelled) {
+      _statusMessage = null;
+      return SongRecognitionResult.cancelled();
+    }
+
     if (result.failure == WhisperRecordingFailure.failed) {
+      debugPrint('WhisperProvider: recording failed (internal failure)');
       return SongRecognitionResult.error('Recording failed.');
     }
 
     _lastSavedPath = result.savedPath;
 
     if (_lastSavedPath == null) {
+      debugPrint('WhisperProvider: no audio saved after recording');
       return SongRecognitionResult.error('No audio recorded.');
     }
 
     // Identify the song
-    final identify = await _whisperService.identifySongFromFile(
-      filePath: _lastSavedPath!,
-      endpoint: Uri.parse(identifyEndpoint),
-      fileField: 'audio_file',
-    );
+    final identify = await _whisperService.identifySongFromFile(filePath: _lastSavedPath!);
 
     if (!identify.ok) {
+      _state = ListeningState.idle;
+      _statusMessage = _getRecognitionErrorMessage(identify.error);
+      debugPrint('WhisperProvider: identification failed, service error="${identify.error}", statusMessage="$_statusMessage"');
+      notifyListeners();
       return SongRecognitionResult.error(identify.error ?? 'Song identification failed.');
     }
 
@@ -76,6 +95,10 @@ class WhisperProvider extends ChangeNotifier {
 
     // Don't process songs with unknown title
     if (title.toLowerCase() == 'unknown title') {
+      _state = ListeningState.idle;
+      _statusMessage = 'No matches. Try again.';
+      debugPrint('WhisperProvider: identified title is Unknown title - aborting');
+      notifyListeners();
       return SongRecognitionResult.error('Could not identify song. Please try again.');
     }
 
@@ -88,15 +111,29 @@ class WhisperProvider extends ChangeNotifier {
         title: matchedSong.title,
         artist: matchedSong.artist,
         confidence: identify.confidence,
+        matchCount: identify.matchCount,
+        queriedPeakCount: identify.queriedPeakCount,
         imageUrl: matchedSong.imageUrl,
         audioUrl: matchedSong.audioUrl,
       );
 
       await _discoveredSongsService.addDiscoveredSong(discoveredSong);
       await loadDiscoveredSongs();
+      _state = ListeningState.idle;
+      _statusMessage = null;
+      notifyListeners();
 
-      return SongRecognitionResult.success(matchedSong, identify.confidence);
+      return SongRecognitionResult.success(
+        matchedSong,
+        identify.confidence,
+        matchCount: identify.matchCount,
+        queriedPeakCount: identify.queriedPeakCount,
+      );
     } else {
+      _state = ListeningState.idle;
+      _statusMessage = 'Not found in database. Search again.';
+      debugPrint('WhisperProvider: song not found in database for title="$title", artist="$artist"');
+      notifyListeners();
       return SongRecognitionResult.notFoundInDatabase(title, artist);
     }
   }
@@ -143,6 +180,58 @@ class WhisperProvider extends ChangeNotifier {
     await loadDiscoveredSongs();
   }
 
+  void cancelRecording() {
+    _whisperService.cancelRecording();
+    _state = ListeningState.idle;
+    _statusMessage = null;
+    notifyListeners();
+  }
+
+  String? _getRecordingErrorMessage(WhisperRecordingFailure? failure) {
+    switch (failure) {
+      case WhisperRecordingFailure.permissionDenied:
+        debugPrint('WhisperProvider: recording error -> permissionDenied');
+        return 'Microphone permission required.';
+      case WhisperRecordingFailure.alreadyRecording:
+        debugPrint('WhisperProvider: recording error -> alreadyRecording');
+        return 'Already recording.';
+      case WhisperRecordingFailure.failed:
+        debugPrint('WhisperProvider: recording error -> failed');
+        return 'Recording failed. Try again.';
+      case WhisperRecordingFailure.cancelled:
+        return null;
+      case null:
+        return null;
+    }
+  }
+
+  String _getRecognitionErrorMessage(String? error) {
+    if (error == null) {
+      debugPrint('WhisperProvider: recognition error -> null');
+      return 'Identification failed. Try again.';
+    }
+
+    final lowerError = error.toLowerCase();
+    String message;
+
+    if (lowerError.contains('too short')) {
+      message = 'Audio is too short. Record at least 8 seconds.';
+    } else if (lowerError.contains('timeout')) {
+      message = 'Request timed out. Check your connection.';
+    } else if (lowerError.contains('no match') || lowerError.contains('not found')) {
+      message = 'No matches found. Try again.';
+    } else if (lowerError.contains('permission')) {
+      message = 'Permission denied. Try again.';
+    } else if (lowerError.contains('network') || lowerError.contains('connection')) {
+      message = 'Network error. Check your connection.';
+    } else {
+      message = 'No matches. Try again.';
+    }
+
+    debugPrint('WhisperProvider: recognition service error="$error" -> userMessage="$message"');
+    return message;
+  }
+
   @override
   void dispose() {
     _whisperService.dispose();
@@ -153,6 +242,8 @@ class WhisperProvider extends ChangeNotifier {
 class SongRecognitionResult {
   final Song? song;
   final double? confidence;
+  final int? matchCount;
+  final int? queriedPeakCount;
   final String? errorMessage;
   final bool isSuccess;
   final bool isNotInDatabase;
@@ -160,17 +251,35 @@ class SongRecognitionResult {
   const SongRecognitionResult._({
     this.song,
     this.confidence,
+    this.matchCount,
+    this.queriedPeakCount,
     this.errorMessage,
     required this.isSuccess,
     required this.isNotInDatabase,
   });
 
-  factory SongRecognitionResult.success(Song song, double? confidence) {
-    return SongRecognitionResult._(song: song, confidence: confidence, isSuccess: true, isNotInDatabase: false);
+  factory SongRecognitionResult.success(
+    Song song,
+    double? confidence, {
+    int? matchCount,
+    int? queriedPeakCount,
+  }) {
+    return SongRecognitionResult._(
+      song: song,
+      confidence: confidence,
+      matchCount: matchCount,
+      queriedPeakCount: queriedPeakCount,
+      isSuccess: true,
+      isNotInDatabase: false,
+    );
   }
 
   factory SongRecognitionResult.notFoundInDatabase(String title, String artist) {
     return SongRecognitionResult._(
+      song: null,
+      confidence: null,
+      matchCount: null,
+      queriedPeakCount: null,
       errorMessage: 'Song "$title" identified but not found in database.',
       isSuccess: false,
       isNotInDatabase: true,
@@ -178,6 +287,12 @@ class SongRecognitionResult {
   }
 
   factory SongRecognitionResult.error(String message) {
-    return SongRecognitionResult._(errorMessage: message, isSuccess: false, isNotInDatabase: false);
+    return SongRecognitionResult._(song: null, confidence: null, matchCount: null, queriedPeakCount: null, errorMessage: message, isSuccess: false, isNotInDatabase: false);
   }
+
+  factory SongRecognitionResult.cancelled() {
+    return const SongRecognitionResult._(song: null, confidence: null, matchCount: null, queriedPeakCount: null, errorMessage: null, isSuccess: false, isNotInDatabase: false);
+  }
+
+  bool get isCancelled => !isSuccess && errorMessage == null && !isNotInDatabase;
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
+import 'package:vespera/components/appbar_profile_avatar.dart';
 import 'package:vespera/models/song.dart';
 import 'package:vespera/services/audio_service.dart';
 import 'package:vespera/services/search_service.dart';
@@ -39,7 +40,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<void> _playPlaylist(List<Song> songs, int startIndex) async {
-    await _audioService.playSongs(playlist: songs, startIndex: startIndex);
+    await _audioService.playSongs(playlist: songs, startIndex: startIndex, playlistName: 'Search');
   }
 
   Future<void> _loadRecentSearches() async {
@@ -104,17 +105,16 @@ class _SearchScreenState extends State<SearchScreen> {
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
         backgroundColor: AppColors.backgroundDark,
-        title: const Text(
-          'Search',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: AppColors.textPrimary),
+        title: const Row(
+          children: [
+            AppBarProfileAvatar(),
+            Text(
+              'Search',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: AppColors.textPrimary),
+            ),
+          ],
         ),
-        leading: Container(
-          margin: const EdgeInsets.only(left: 15.0),
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 3.0),
-            child: CircleAvatar(backgroundImage: AssetImage('assets/profilePic.jpg')),
-          ),
-        ),
+        
         // -----------------------------------------
         // REMOVE THIS & 'AddSongsData.dart' IMMIDIATELY AFTER DEVELOPMENT
         // BUTTON TO ADD SAMPLE SONGS TO FIRESTORE
@@ -125,7 +125,7 @@ class _SearchScreenState extends State<SearchScreen> {
             child: IconButton(
               icon: const Icon(Icons.add, size: 30, color: AppColors.textPrimary),
               onPressed: () {
-                AddSongsData.addSampleSongs(context);
+                AddSongsData.displayALlSongsWithNameAndLink(context);
                 print('Add button pressed. Adding songs to database');
               },
             ),
@@ -259,7 +259,11 @@ class _SearchScreenState extends State<SearchScreen> {
                                 ),
                               ),
                               TextButton(
-                                onPressed: () {
+                                onPressed: () async {
+                                  final userId = FirebaseAuth.instance.currentUser?.uid;
+                                  if (userId != null) {
+                                    await _searchService.clearAllRecentSongSearches(userId);
+                                  }
                                   setState(() {
                                     recentSearches.clear();
                                   });
@@ -295,7 +299,15 @@ class _SearchScreenState extends State<SearchScreen> {
                                     Icons.close,
                                     color: AppColors.textPrimary.withOpacity(0.6),
                                   ),
-                                  onPressed: () {
+                                  onPressed: () async {
+                                    final userId = FirebaseAuth.instance.currentUser?.uid;
+                                    final songId = item['songId'] as String?;
+                                    if (userId != null && songId != null) {
+                                      await _searchService.deleteRecentSongSearch(
+                                        userId: userId,
+                                        songId: songId,
+                                      );
+                                    }
                                     setState(() {
                                       recentSearches.removeAt(index);
                                     });

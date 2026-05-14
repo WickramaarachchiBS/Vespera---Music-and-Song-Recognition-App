@@ -102,8 +102,9 @@ class _DiscoveredSongCard extends StatelessWidget {
           child: const Icon(Icons.delete, color: Colors.white, size: 28),
         ),
         onDismissed: (direction) async {
+          debugPrint('🗑️ Removing discovered song: ${song.title}');
           await provider.removeDiscoveredSong(index);
-          onShowSnackBar('Song removed');
+          onShowSnackBar('Removed');
         },
         child: Material(
           color: Colors.transparent,
@@ -113,9 +114,16 @@ class _DiscoveredSongCard extends StatelessWidget {
               final matchedSong = await provider.searchDiscoveredSongInFirebase(song.title);
 
               if (matchedSong != null && context.mounted) {
-                IdentifiedSongWithPlaylistModal.show(context, song: matchedSong, confidence: song.confidence);
+                IdentifiedSongWithPlaylistModal.show(
+                  context,
+                  song: matchedSong,
+                  confidence: song.confidence,
+                  matchCount: song.matchCount,
+                  queriedPeakCount: song.queriedPeakCount,
+                );
               } else {
-                onShowSnackBar('Song not found in database. Cannot add to playlist.');
+                debugPrint('❌ Song not found in database: ${song.title}');
+                onShowSnackBar('Not in database');
               }
             },
             child: Padding(
@@ -188,7 +196,7 @@ class _DiscoveredSongCard extends StatelessWidget {
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            if (song.confidence != null) ...[
+                            if (song.matchCount != null || song.confidence != null) ...[
                               const SizedBox(width: 12),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -197,7 +205,11 @@ class _DiscoveredSongCard extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
-                                  '${(song.confidence! * 100).toStringAsFixed(0)}%',
+                                  song.matchCount != null
+                                      ? song.queriedPeakCount != null
+                                          ? '${song.matchCount}/${song.queriedPeakCount} matches'
+                                          : '${song.matchCount}/100 matches'
+                                      : '${(song.confidence! * 100).toStringAsFixed(0)}%',
                                   style: TextStyle(
                                     color: AppColors.accentBlue,
                                     fontSize: 11,

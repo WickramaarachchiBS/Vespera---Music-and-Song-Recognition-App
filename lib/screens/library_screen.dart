@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
+import 'package:vespera/components/appbar_profile_avatar.dart';
 import 'package:vespera/components/create_playlist_modal.dart';
+import 'package:vespera/helpers/app_notification.dart';
 import 'package:vespera/screens/playlist_detail_screen.dart';
 import 'package:vespera/services/playlist_service.dart';
 
@@ -21,18 +23,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
       await _playlistService.createPlaylist(playlistName, 'assets/dandelion.jpg');
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Playlist "$playlistName" created!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        AppNotification.showSuccess(context, 'Playlist "$playlistName" created!');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error creating playlist: $e'), backgroundColor: Colors.red),
-        );
+        AppNotification.showError(context, 'Error creating playlist: $e');
       }
     }
   }
@@ -43,16 +38,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
         backgroundColor: AppColors.backgroundDark,
-        title: const Text(
-          'Your Library',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: AppColors.textPrimary),
-        ),
-        leading: Container(
-          margin: const EdgeInsets.only(left: 15.0),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 3.0),
-            child: CircleAvatar(backgroundImage: AssetImage('assets/profilePic.jpg')),
-          ),
+        title: const Row(
+          children: [
+            AppBarProfileAvatar(),
+            Text(
+              'Your Library',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: AppColors.textPrimary),
+            ),
+          ],
         ),
         actions: [
           Row(
@@ -175,6 +168,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     String playlistId = playlist.id;
                     String name = playlistData['name'] ?? 'Untitled';
                     String imageURL = playlistData['imageURL'] ?? 'err';
+                    final imageUri = Uri.tryParse(imageURL);
+                    final isNetworkImage =
+                      imageUri != null &&
+                      (imageUri.scheme == 'http' || imageUri.scheme == 'https') &&
+                      imageUri.host.isNotEmpty;
 
                     return Container(
                       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -237,21 +235,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           try {
                             await _playlistService.deletePlaylist(playlistId);
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Deleted "$name"'),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
+                              AppNotification.showSuccess(context, 'Deleted playlist "$name"');
                             }
                           } catch (e) {
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Error deleting playlist: $e'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
+                              AppNotification.showError(context, 'Error deleting playlist: $e');
                             }
                           }
                         },
@@ -283,7 +271,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                             height: 60,
                                             fit: BoxFit.cover,
                                           )
-                                        : Image.network(
+                                        : isNetworkImage
+                                        ? Image.network(
+                                            imageURL,
+                                            width: 60,
+                                            height: 60,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return Image.asset(
+                                                'assets/errorLoading.jpg',
+                                                width: 60,
+                                                height: 60,
+                                                fit: BoxFit.cover,
+                                              );
+                                            },
+                                          )
+                                        : Image.asset(
                                             imageURL,
                                             width: 60,
                                             height: 60,

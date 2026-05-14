@@ -24,18 +24,25 @@ class PlaylistService {
 
   // Get playlists for the current user
   Stream<QuerySnapshot> getUserPlaylists() {
-    if (_userId == null) throw Exception('User not authenticated');
+    final userId = _userId;
+    if (userId == null) {
+      // Return an always-empty query stream while auth state is resolving.
+      return _firestore.collection('playlists').where('userId', isEqualTo: '').limit(0).snapshots();
+    }
 
-    return _firestore.collection('playlists').where('userId', isEqualTo: _userId).snapshots();
+    return _firestore.collection('playlists').where('userId', isEqualTo: userId).snapshots();
   }
 
   // Get playlists for the current user (typed)
   Stream<List<Playlist>> getUserPlaylistsTyped() {
-    if (_userId == null) throw Exception('User not authenticated');
+    final userId = _userId;
+    if (userId == null) {
+      return Stream.value(const <Playlist>[]);
+    }
 
     return _firestore
         .collection('playlists')
-        .where('userId', isEqualTo: _userId)
+        .where('userId', isEqualTo: userId)
         .snapshots()
         .map((snap) => snap.docs.map((d) => Playlist.fromDoc(d)).toList());
   }
@@ -56,7 +63,10 @@ class PlaylistService {
   Future<void> addSongToPlaylist(String playlistId, Map<String, dynamic> songData) async {
     if (_userId == null) throw Exception('User not authenticated');
 
-    await _firestore.collection('playlists').doc(playlistId).collection('songs').add(songData);
+    final payload = Map<String, dynamic>.from(songData);
+    payload['addedAt'] = FieldValue.serverTimestamp();
+
+    await _firestore.collection('playlists').doc(playlistId).collection('songs').add(payload);
   }
 
   // Get songs in a playlist (typed)
@@ -65,6 +75,7 @@ class PlaylistService {
         .collection('playlists')
         .doc(playlistId)
         .collection('songs')
+      .orderBy('addedAt', descending: true)
         .snapshots()
         .map((snap) => snap.docs.map((d) => Song.fromDoc(d)).toList());
   }
@@ -72,7 +83,11 @@ class PlaylistService {
   // Add a song using the model
   Future<void> addSongToPlaylistModel(String playlistId, Song song) async {
     if (_userId == null) throw Exception('User not authenticated');
-    await _firestore.collection('playlists').doc(playlistId).collection('songs').add(song.toMap());
+
+    final payload = Map<String, dynamic>.from(song.toMap());
+    payload['addedAt'] = FieldValue.serverTimestamp();
+
+    await _firestore.collection('playlists').doc(playlistId).collection('songs').add(payload);
   }
 
   // Remove a song from a playlist

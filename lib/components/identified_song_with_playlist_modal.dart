@@ -6,22 +6,29 @@ import 'package:vespera/services/audio_service.dart';
 import 'package:vespera/services/playlist_service.dart';
 
 class IdentifiedSongWithPlaylistModal {
-  static void show(BuildContext context, {required Song song, double? confidence}) {
+  static void show(BuildContext context, {required Song song, int? matchCount, int? queriedPeakCount, double? confidence}) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => _IdentifiedSongWithPlaylistContent(song: song, confidence: confidence),
+      builder: (context) => _IdentifiedSongWithPlaylistContent(
+        song: song,
+        matchCount: matchCount,
+        queriedPeakCount: queriedPeakCount,
+        confidence: confidence,
+      ),
     );
   }
 }
 
 class _IdentifiedSongWithPlaylistContent extends StatelessWidget {
   final Song song;
+  final int? matchCount;
+  final int? queriedPeakCount;
   final double? confidence;
   final PlaylistService _playlistService = PlaylistService();
 
-  _IdentifiedSongWithPlaylistContent({required this.song, this.confidence});
+  _IdentifiedSongWithPlaylistContent({required this.song, this.matchCount, this.queriedPeakCount, this.confidence});
 
   Future<void> _addToPlaylist(BuildContext context, String playlistId, String playlistName) async {
     try {
@@ -140,7 +147,7 @@ class _IdentifiedSongWithPlaylistContent extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          if (confidence != null) ...[
+                          if (matchCount != null || confidence != null) ...[
                             const SizedBox(height: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -149,7 +156,11 @@ class _IdentifiedSongWithPlaylistContent extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                '${(confidence! * 100).toStringAsFixed(0)}% match',
+                                matchCount != null
+                                  ? queriedPeakCount != null
+                                      ? '$matchCount/$queriedPeakCount matches'
+                                      : '$matchCount/100 matches'
+                                    : '${(confidence! * 100).toStringAsFixed(0)}% match',
                                 style: TextStyle(
                                   color: Colors.white.withOpacity(0.9),
                                   fontSize: 12,
@@ -180,6 +191,7 @@ class _IdentifiedSongWithPlaylistContent extends StatelessWidget {
                             title: song.title,
                             artist: song.artist,
                             imageUrl: song.imageUrl,
+                            playSource: 'Identified Song',
                           );
                           if (context.mounted) {
                             Navigator.pop(context);

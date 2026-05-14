@@ -127,4 +127,90 @@ class AuthService {
       throw 'Failed to update profile.';
     }
   }
+
+  Future<void> _reauthenticateWithPassword({required String password}) async {
+    final user = _auth.currentUser;
+    if (user == null || user.email == null) {
+      throw 'No authenticated user found.';
+    }
+
+    final credential = EmailAuthProvider.credential(
+      email: user.email!,
+      password: password,
+    );
+
+    await user.reauthenticateWithCredential(credential);
+  }
+
+  Future<void> changeEmail({
+    required String newEmail,
+    required String currentPassword,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) throw 'No authenticated user found.';
+
+      await _reauthenticateWithPassword(password: currentPassword);
+      await user.verifyBeforeUpdateEmail(newEmail);
+
+      await _firestore.collection('users').doc(user.uid).update({
+        'email': newEmail,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } on FirebaseAuthException catch (e) {
+      throw 'Email update failed (${e.code}): ${e.message ?? 'Unknown error'}';
+    } catch (e) {
+      throw 'Failed to change email: $e';
+    }
+  }
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) throw 'No authenticated user found.';
+
+      await _reauthenticateWithPassword(password: currentPassword);
+      await user.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw 'Password update failed (${e.code}): ${e.message ?? 'Unknown error'}';
+    } catch (e) {
+      throw 'Failed to change password: $e';
+    }
+  }
+
+  Future<void> deleteAccount({required String currentPassword}) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) throw 'No authenticated user found.';
+
+      await _reauthenticateWithPassword(password: currentPassword);
+
+      final userDocRef = _firestore.collection('users').doc(user.uid);
+      final recentSongs = await userDocRef.collection('recentSongSearches').get();
+      final recentQueries = await userDocRef.collection('recentQueries').get();
+      final sessions = await userDocRef.collection('listeningSessions').get();
+
+      final batch = _firestore.batch();
+      for (final doc in recentSongs.docs) {
+        batch.delete(doc.reference);
+      }
+      for (final doc in recentQueries.docs) {
+        batch.delete(doc.reference);
+      }
+      for (final doc in sessions.docs) {
+        batch.delete(doc.reference);
+      }
+      batch.delete(userDocRef);
+      await batch.commit();
+
+      await user.delete();
+    } on FirebaseAuthException catch (e) {
+      throw 'Account deletion failed (${e.code}): ${e.message ?? 'Unknown error'}';
+    } catch (e) {
+      throw 'Failed to delete account: $e';
+    }
+  }
 }

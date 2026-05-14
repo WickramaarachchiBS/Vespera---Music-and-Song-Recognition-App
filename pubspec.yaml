@@ -45,10 +45,13 @@ dependencies:
   path_provider: ^2.1.4
   http: ^1.2.2
   shared_preferences: ^2.3.4
+  google_nav_bar: ^5.0.7
+  simple_clean_navbar: ^1.0.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  http: ^1.2.2
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

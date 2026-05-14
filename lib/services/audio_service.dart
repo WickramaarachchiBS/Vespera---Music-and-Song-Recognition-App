@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:vespera/models/song.dart';
@@ -9,12 +11,16 @@ class AudioService extends ChangeNotifier {
 
   factory AudioService() => _instance;
 
-  AudioService._internal();
+  AudioService._internal() {
+    // Keep state in sync even before the handler is attached.
+    _bindToPlayer(_audioPlayer);
+  }
 
   MyAudioHandler? _audioHandler;
   
   void initializeHandler(MyAudioHandler handler) {
     _audioHandler = handler;
+    _bindToPlayer(handler.player);
   }
 
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -36,6 +42,14 @@ class AudioService extends ChangeNotifier {
 
   String? get currentImageUrl => _currentImageUrl;
 
+  bool get hasValidNetworkImage {
+    final raw = _currentImageUrl;
+    if (raw == null || raw.trim().isEmpty) return false;
+    final uri = Uri.tryParse(raw.trim());
+    if (uri == null) return false;
+    return (uri.scheme == 'http' || uri.scheme == 'https') && uri.host.isNotEmpty;
+  }
+
   String? get currentAudioUrl => _currentAudioUrl;
 
   bool get isPlaying => _isPlaying;
@@ -49,7 +63,51 @@ class AudioService extends ChangeNotifier {
   List<Song> _currentSongs = const [];
   int _currentIndex = 0;
   bool _playlistMode = false;
-  StreamSubscription<ProcessingState>? _processingStateSub; // pseudo; adjust below
+  bool _isRepeat = false;
+  String? _playSource;
+  String? _activeSessionId;
+  DateTime? _activeSessionStartedAt;
+  bool _activeSessionFinalized = true;
+  StreamSubscription<ProcessingState>? _processingStateSub;
+  StreamSubscription? _durationSub;
+  StreamSubscription? _positionSub;
+  StreamSubscription? _playerStateSub;
+
+  bool get isRepeat => _isRepeat;
+  String? get playSource => _playSource;
+
+  void _bindToPlayer(AudioPlayer player) {
+    _durationSub?.cancel();
+    _positionSub?.cancel();
+    _playerStateSub?.cancel();
+
+    _durationSub = player.durationStream.listen((duration) {
+      _duration = duration ?? Duration.zero;
+      notifyListeners();
+    });
+
+    _positionSub = player.positionStream.listen((position) {
+      _position = position;
+      notifyListeners();
+    });
+
+    _playerStateSub = player.playerStateStream.listen((state) {
+      _isPlaying = state.playing;
+
+      if (state.processingState == ProcessingState.completed && !_activeSessionFinalized) {
+        unawaited(_finalizeListeningSession(status: 'completed', completed: true));
+      }
+
+      notifyListeners();
+    });
+  }
+
+  Future<void> toggleRepeat() async {
+    _isRepeat = !_isRepeat;
+    final player = _audioHandler?.player ?? _audioPlayer;
+    await player.setLoopMode(_isRepeat ? LoopMode.one : LoopMode.off);
+    notifyListeners();
+  }
 
   // Get current song as Song object
   Song? get currentSong {
@@ -78,61 +136,50 @@ class AudioService extends ChangeNotifier {
     String? title,
     String? artist,
     String? imageUrl,
+    String? playSource,
   }) async {
+    if (playSource != null) _playSource = playSource;
+
     try {
+      if (!_activeSessionFinalized) {
+        await _finalizeListeningSession(status: 'interrupted', completed: false);
+      }
+
       // Update current song details
       _currentAudioUrl = audioUrl;
       _currentSongTitle = title;
       _currentArtist = artist;
       _currentImageUrl = imageUrl;
+      _duration = Duration.zero;
+      _position = Duration.zero;
 
       // Make UI react immediately (e.g. show mini player) before awaiting async loading.
       notifyListeners();
 
+      // Increment play count in Firestore (fire-and-forget).
+      _incrementPlayCount(audioUrl);
+      unawaited(
+        _startListeningSession(
+          audioUrl: audioUrl,
+          title: title,
+          artist: artist,
+          imageUrl: imageUrl,
+        ),
+      );
+
       // Use audio handler if available (enables background playback + notifications)
       if (_audioHandler != null) {
+        _bindToPlayer(_audioHandler!.player);
         await _audioHandler!.playFromUrl(
           audioUrl,
           title: title ?? 'Unknown',
           artist: artist ?? 'Unknown',
           artUri: imageUrl,
         );
-        // Listen to the handler's player instead
-        final player = _audioHandler!.player;
-        
-        player.durationStream.listen((duration) {
-          _duration = duration ?? Duration.zero;
-          notifyListeners();
-        });
-
-        player.positionStream.listen((position) {
-          _position = position;
-          notifyListeners();
-        });
-
-        player.playerStateStream.listen((state) {
-          _isPlaying = state.playing;
-          notifyListeners();
-        });
       } else {
         // Fallback to direct player (no background support)
+        _bindToPlayer(_audioPlayer);
         await _audioPlayer.setUrl(audioUrl);
-
-        _audioPlayer.durationStream.listen((duration) {
-          _duration = duration ?? Duration.zero;
-          notifyListeners();
-        });
-
-        _audioPlayer.positionStream.listen((position) {
-          _position = position;
-          notifyListeners();
-        });
-
-        _audioPlayer.playerStateStream.listen((state) {
-          _isPlaying = state.playing;
-          notifyListeners();
-        });
-
         await _audioPlayer.play();
       }
       
@@ -147,17 +194,34 @@ class AudioService extends ChangeNotifier {
     }
   }
 
+  /// Increment the playCount field of the song document whose audioUrl matches.
+  void _incrementPlayCount(String audioUrl) {
+    FirebaseFirestore.instance
+        .collection('songs')
+        .where('audioUrl', isEqualTo: audioUrl)
+        .limit(1)
+        .get()
+        .then((snap) {
+      if (snap.docs.isNotEmpty) {
+        snap.docs.first.reference.update({
+          'playCount': FieldValue.increment(1),
+        });
+      }
+    }).catchError((e) {
+      debugPrint('playCount increment failed: $e');
+    });
+  }
+
   Future<void> togglePlayPause() async {
     final player = _audioHandler?.player ?? _audioPlayer;
     if (_isPlaying) {
       await player.pause();
       _isPlaying = false;
-      print('Paused');
     } else {
-      print('Playing');
       await player.play();
       _isPlaying = true;
     }
+    notifyListeners();
   }
 
   Future<void> seekTo(Duration position) async {
@@ -167,16 +231,111 @@ class AudioService extends ChangeNotifier {
 
   @override
   void dispose() {
+    if (!_activeSessionFinalized) {
+      unawaited(_finalizeListeningSession(status: 'stopped', completed: false));
+    }
+
+    _durationSub?.cancel();
+    _positionSub?.cancel();
+    _playerStateSub?.cancel();
+    _processingStateSub?.cancel();
     _audioPlayer.dispose();
     super.dispose();
   }
 
-  Future<void> playSongs({required List<Song> playlist, required int startIndex}) async {
+  Future<void> _startListeningSession({
+    required String audioUrl,
+    String? title,
+    String? artist,
+    String? imageUrl,
+  }) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) {
+      _activeSessionId = null;
+      _activeSessionStartedAt = null;
+      _activeSessionFinalized = true;
+      return;
+    }
+
+    final sessionRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('listeningSessions')
+        .doc();
+
+    final startedAt = DateTime.now();
+    _activeSessionId = sessionRef.id;
+    _activeSessionStartedAt = startedAt;
+    _activeSessionFinalized = false;
+
+    try {
+      await sessionRef.set({
+        'audioUrl': audioUrl,
+        'title': title ?? 'Unknown',
+        'artist': artist ?? 'Unknown',
+        'imageUrl': imageUrl ?? '',
+        'playSource': _playSource ?? 'Unknown',
+        'startedAt': Timestamp.fromDate(startedAt),
+        'listenedAt': Timestamp.fromDate(startedAt),
+        'status': 'started',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint('session start failed: $e');
+      _activeSessionId = null;
+      _activeSessionStartedAt = null;
+      _activeSessionFinalized = true;
+    }
+  }
+
+  Future<void> _finalizeListeningSession({
+    required String status,
+    required bool completed,
+  }) async {
+    if (_activeSessionFinalized) return;
+
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    final sessionId = _activeSessionId;
+    if (userId == null || sessionId == null) {
+      _activeSessionFinalized = true;
+      return;
+    }
+
+    final endedAt = DateTime.now();
+    final elapsedFromPosition = _position.inSeconds;
+    final elapsedFromTime =
+        _activeSessionStartedAt == null ? 0 : endedAt.difference(_activeSessionStartedAt!).inSeconds;
+    final durationSeconds = elapsedFromPosition > 0 ? elapsedFromPosition : elapsedFromTime;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('listeningSessions')
+          .doc(sessionId)
+          .set({
+        'endedAt': Timestamp.fromDate(endedAt),
+        'durationSeconds': durationSeconds < 0 ? 0 : durationSeconds,
+        'completed': completed,
+        'status': status,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('session finalize failed: $e');
+    } finally {
+      _activeSessionFinalized = true;
+      _activeSessionId = null;
+      _activeSessionStartedAt = null;
+    }
+  }
+
+  Future<void> playSongs({required List<Song> playlist, required int startIndex, String? playlistName}) async {
     if (playlist.isEmpty || startIndex < 0 || startIndex >= playlist.length) return;
 
     _currentSongs = playlist;
     _currentIndex = startIndex;
     _playlistMode = true;
+    if (playlistName != null) _playSource = playlistName;
 
     // Pass playlist context to audio handler
     if (_audioHandler != null) {
