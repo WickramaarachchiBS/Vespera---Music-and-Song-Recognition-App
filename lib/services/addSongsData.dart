@@ -121,4 +121,30 @@ class AddSongsData {
       }
     }
   }
+
+  static Future<void> displayALlSongsWithNameAndLink(BuildContext context) async {
+    final firestore = FirebaseFirestore.instance;
+    final songsColl = firestore.collection('songs');
+
+    try {
+      final snapshot = await songsColl.get();
+      final songs = snapshot.docs.map((doc) => doc.data()).toList();
+
+      debugPrint('🎶 All Songs in Database:');
+      for (final song in songs) {
+        debugPrint('Title: ${song['title']}, Artist: ${song['artist']}, URL: ${song['audioUrl']}');
+      }
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Check console for all songs with names and links')),
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ Error fetching songs: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+      }
+    }
+  }
 }

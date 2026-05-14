@@ -122,6 +122,7 @@ class PeakBasedRecognizer implements SongRecognizer {
       }
 
       final List<int> jsonBytes = utf8.encode(jsonEncode(payload.toJson()));
+      print(jsonEncode(payload));
       List<int> bodyBytes = jsonBytes;
       final Map<String, String> headers = <String, String>{
         'Content-Type': 'application/json',
