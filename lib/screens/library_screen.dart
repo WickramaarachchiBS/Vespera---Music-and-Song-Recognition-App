@@ -16,6 +16,8 @@ class LibraryScreen extends StatefulWidget {
 
 class _LibraryScreenState extends State<LibraryScreen> {
   final PlaylistService _playlistService = PlaylistService();
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
 
   // Create playlist
   Future<void> _createPlaylist(String playlistName) async {
@@ -33,18 +35,40 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
         backgroundColor: AppColors.backgroundDark,
-        title: const Row(
+        title: Row(
           children: [
-            AppBarProfileAvatar(),
-            Text(
-              'Your Library',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: AppColors.textPrimary),
-            ),
+            if (!_isSearching) ...[
+              const AppBarProfileAvatar(),
+              const SizedBox(width: 8),
+              const Text(
+                'Your Library',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: AppColors.textPrimary),
+              ),
+            ] else ...[
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  style: const TextStyle(color: AppColors.textPrimary),
+                  decoration: const InputDecoration(
+                    hintText: 'Search playlists...',
+                    hintStyle: TextStyle(color: AppColors.textMuted),
+                    border: InputBorder.none,
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+            ],
           ],
         ),
         actions: [
@@ -53,11 +77,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
               Container(
                 margin: EdgeInsets.only(right: 8.0),
                 child: IconButton(
-                  //USE A CUSTOM ICON FOR THIS
-                  icon: const Icon(Icons.search_rounded, size: 30, color: AppColors.textPrimary),
-                  // Handle search button press
+                  icon: Icon(_isSearching ? Icons.close : Icons.search_rounded, size: 30, color: AppColors.textPrimary),
                   onPressed: () {
-                    print('Search button pressed. Nothing happens yet.');
+                    setState(() {
+                      _isSearching = !_isSearching;
+                      if (!_isSearching) _searchController.clear();
+                    });
                   },
                 ),
               ),
@@ -157,13 +182,29 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     ),
                   );
                 }
+                // Apply client-side filtering based on search query
+                final query = _searchController.text.toLowerCase();
+                final docs = snapshot.data!.docs.where((d) {
+                  final data = d.data() as Map<String, dynamic>;
+                  final name = (data['name'] ?? '').toString().toLowerCase();
+                  return name.contains(query);
+                }).toList();
+
+                if (docs.isEmpty) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Text('No playlists match your search.', style: TextStyle(color: AppColors.textMuted)),
+                    ),
+                  );
+                }
 
                 return ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: snapshot.data!.docs.length,
+                  itemCount: docs.length,
                   itemBuilder: (context, index) {
-                    var playlist = snapshot.data!.docs[index];
+                    var playlist = docs[index];
                     var playlistData = playlist.data() as Map<String, dynamic>;
                     String playlistId = playlist.id;
                     String name = playlistData['name'] ?? 'Untitled';
