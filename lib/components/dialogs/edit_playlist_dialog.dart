@@ -1,16 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
+import 'package:vespera/helpers/app_notification.dart';
+import 'package:vespera/services/playlist_service.dart';
 
-class CreatePlaylistModal {
-  static void show(BuildContext context, Function(String) onPlaylistCreated) {
-    final TextEditingController playlistNameController = TextEditingController();
+class EditPlaylistDialog {
+  static Future<void> show(
+    BuildContext context, {
+    required String playlistId,
+    required String currentName,
+    required VoidCallback onSuccess,
+  }) async {
+    final nameController = TextEditingController(text: currentName);
+    bool isSaving = false;
+    final playlistService = PlaylistService();
 
-    showDialog(
+    await showDialog<void>(
       context: context,
       barrierColor: Colors.black.withOpacity(0.6),
-      builder: (BuildContext context) {
+      builder: (dialogContext) {
         return StatefulBuilder(
-          builder: (context, setState) {
+          builder: (context, setDialogState) {
             return Dialog(
               backgroundColor: Colors.transparent,
               elevation: 0,
@@ -42,7 +51,7 @@ class CreatePlaylistModal {
                             ),
                             padding: const EdgeInsets.all(12),
                             child: const Icon(
-                              Icons.playlist_add,
+                              Icons.edit_note,
                               color: Colors.green,
                               size: 28,
                             ),
@@ -50,7 +59,7 @@ class CreatePlaylistModal {
                           const SizedBox(height: 16),
                           // Title
                           const Text(
-                            'Create Playlist',
+                            'Edit Playlist',
                             style: TextStyle(
                               color: AppColors.textPrimary,
                               fontSize: 22,
@@ -60,7 +69,7 @@ class CreatePlaylistModal {
                           const SizedBox(height: 8),
                           // Subtitle
                           Text(
-                            'Give your playlist a catchy name',
+                            'Update your playlist name',
                             style: TextStyle(
                               color: AppColors.textMuted,
                               fontSize: 13,
@@ -78,18 +87,18 @@ class CreatePlaylistModal {
                               ),
                             ),
                             child: TextField(
-                              controller: playlistNameController,
+                              controller: nameController,
                               style: const TextStyle(
                                 color: AppColors.textPrimary,
                                 fontSize: 15,
                               ),
                               decoration: InputDecoration(
-                                hintText: 'e.g., Chill Vibes, Summer Hits...',
+                                hintText: 'Enter playlist name',
                                 hintStyle: const TextStyle(color: AppColors.textMuted),
                                 prefixIcon: const Padding(
                                   padding: EdgeInsets.all(12),
                                   child: Icon(
-                                    Icons.music_note,
+                                    Icons.playlist_add_circle,
                                     color: Colors.green,
                                     size: 20,
                                   ),
@@ -111,61 +120,95 @@ class CreatePlaylistModal {
                               // Cancel button
                               Expanded(
                                 child: TextButton(
-                                  onPressed: () => Navigator.of(context).pop(),
+                                  onPressed: isSaving
+                                      ? null
+                                      : () {
+                                          FocusManager.instance.primaryFocus?.unfocus();
+                                          Navigator.of(dialogContext).pop();
+                                        },
                                   style: TextButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(vertical: 12),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10),
-                                      side: const BorderSide(
-                                        color: AppColors.textMuted,
+                                      side: BorderSide(
+                                        color: isSaving ? AppColors.textMuted.withOpacity(0.5) : AppColors.textMuted,
                                         width: 1,
                                       ),
                                     ),
                                   ),
-                                  child: const Text(
+                                  child: Text(
                                     'Cancel',
                                     style: TextStyle(
-                                      color: AppColors.textMuted,
+                                      color: isSaving ? AppColors.textMuted.withOpacity(0.5) : AppColors.textMuted,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              // Create button
+                              // Save button
                               Expanded(
                                 child: ElevatedButton(
-                                  onPressed: () {
-                                    final playlistName = playlistNameController.text.trim();
-                                    if (playlistName.isNotEmpty) {
-                                      onPlaylistCreated(playlistName);
-                                      Navigator.of(context).pop();
-                                    } else {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Please enter a playlist name'),
-                                          backgroundColor: Colors.redAccent,
-                                          duration: Duration(seconds: 2),
-                                        ),
-                                      );
-                                    }
-                                  },
+                                  onPressed: isSaving
+                                      ? null
+                                      : () async {
+                                          final newName = nameController.text.trim();
+
+                                          if (newName.isEmpty) {
+                                            AppNotification.showError(context, 'Playlist name cannot be empty');
+                                            return;
+                                          }
+
+                                          if (newName == currentName) {
+                                            Navigator.of(dialogContext).pop();
+                                            return;
+                                          }
+
+                                          setDialogState(() => isSaving = true);
+
+                                          try {
+                                            await playlistService.updatePlaylistName(playlistId, newName);
+
+                                            if (!context.mounted) return;
+                                            FocusManager.instance.primaryFocus?.unfocus();
+                                            Navigator.of(dialogContext).pop();
+
+                                            if (context.mounted) {
+                                              AppNotification.showSuccess(context, 'Playlist renamed successfully');
+                                              onSuccess();
+                                            }
+                                          } catch (e) {
+                                            if (!context.mounted) return;
+                                            setDialogState(() => isSaving = false);
+                                            AppNotification.showError(context, 'Error updating playlist: $e');
+                                          }
+                                        },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green,
+                                    backgroundColor: isSaving ? Colors.green.withOpacity(0.6) : Colors.green,
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(vertical: 12),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     elevation: 4,
+                                    disabledBackgroundColor: Colors.green.withOpacity(0.5),
                                   ),
-                                  child: const Text(
-                                    'Create',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                    ),
-                                  ),
+                                  child: isSaving
+                                      ? const SizedBox(
+                                          width: 18,
+                                          height: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                          ),
+                                        )
+                                      : const Text(
+                                          'Save',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                          ),
+                                        ),
                                 ),
                               ),
                             ],

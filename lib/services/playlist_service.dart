@@ -54,6 +54,15 @@ class PlaylistService {
     await _firestore.collection('playlists').doc(playlistId).delete();
   }
 
+  // Update playlist name
+  Future<void> updatePlaylistName(String playlistId, String newName) async {
+    if (_userId == null) throw Exception('User not authenticated');
+
+    await _firestore.collection('playlists').doc(playlistId).update({
+      'name': newName,
+    });
+  }
+
   // Get playlist details
   Stream<DocumentSnapshot> getPlaylistDetails(String playlistId) {
     return _firestore.collection('playlists').doc(playlistId).snapshots();

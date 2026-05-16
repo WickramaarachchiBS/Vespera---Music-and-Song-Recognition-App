@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:vespera/colors.dart';
+import 'package:vespera/components/dialogs/edit_playlist_dialog.dart';
 import 'package:vespera/helpers/app_notification.dart';
 import 'package:vespera/models/song.dart';
 import 'package:vespera/screens/common_screen.dart';
@@ -20,13 +21,14 @@ class PlaylistDetailScreen extends StatefulWidget {
 class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
   final PlaylistService _playlistService = PlaylistService();
   final AudioService _audioService = AudioService();
+  String _sortBy = 'dateAdded'; // 'dateAdded', 'titleAZ', 'titleZA', 'duration'
 
   Stream<List<Song>> _getPlaylistSongs() {
     return _playlistService.getPlaylistSongs(widget.playlistId);
   }
 
-  Future<void> _playPlaylist(List<Song> songs, int startIndex) async {
-    await _audioService.playSongs(playlist: songs, startIndex: startIndex, playlistName: widget.playlistName);
+  Future<void> _playPlaylist(List<Song> songs, int startIndex, String playlistName) async {
+    await _audioService.playSongs(playlist: songs, startIndex: startIndex, playlistName: playlistName);
   }
 
   // Method to delete a song
@@ -43,6 +45,39 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
     }
   }
 
+  // Method to sort songs based on the selected sort option
+  List<Song> _sortSongs(List<Song> songs) {
+    final sorted = List<Song>.from(songs);
+    
+    switch (_sortBy) {
+      case 'titleAZ':
+        sorted.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+        break;
+      case 'titleZA':
+        sorted.sort((a, b) => b.title.toLowerCase().compareTo(a.title.toLowerCase()));
+        break;
+      case 'duration':
+        sorted.sort((a, b) {
+          // Parse duration strings (e.g., "3:45" -> seconds)
+          int getDurationInSeconds(String duration) {
+            final parts = duration.split(':');
+            if (parts.length == 2) {
+              return int.parse(parts[0]) * 60 + int.parse(parts[1]);
+            }
+            return 0;
+          }
+          return getDurationInSeconds(a.duration).compareTo(getDurationInSeconds(b.duration));
+        });
+        break;
+      case 'dateAdded':
+      default:
+        // Keep original order (already sorted by Firebase)
+        break;
+    }
+    
+    return sorted;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,6 +87,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
         builder: (context, playlistSnapshot) {
           final playlistData = playlistSnapshot.data?.data() as Map<String, dynamic>?;
           final imageUrl = playlistData?['imageURL'] ?? '';
+          final currentPlaylistName = playlistData?['name'] ?? widget.playlistName;
 
           return CustomScrollView(
             slivers: [
@@ -66,7 +102,21 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                 ),
                 actions: [
                   IconButton(
-                    icon: const Icon(Icons.add, color: AppColors.textPrimary),
+                    icon: const Icon(Icons.edit, color: AppColors.textPrimary, size: 20,),
+                    onPressed: () {
+                      EditPlaylistDialog.show(
+                        context,
+                        playlistId: widget.playlistId,
+                        currentName: currentPlaylistName,
+                        onSuccess: () {
+                          // No need to setState - StreamBuilder will auto-update from Firestore
+                        },
+                      );
+                    },
+                    tooltip: 'Edit Playlist',
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add, color: AppColors.textPrimary, size: 28,),
                     onPressed: () {
                       // Navigate back to CommonScreen with search tab selected (index 1)
                       Navigator.of(context, rootNavigator: true).pushReplacement(
@@ -80,7 +130,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                 ],
                 centerTitle: true,
                 title: Text(
-                  widget.playlistName,
+                  currentPlaylistName,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
@@ -145,6 +195,96 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                   ),
                 ),
               ),
+              // Sort chips widget
+              SliverToBoxAdapter(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
+                  child: Row(
+                    children: [
+                      FilterChip(
+                        label: const Text('Date Added'),
+                        selected: _sortBy == 'dateAdded',
+                        onSelected: (selected) {
+                          if (selected) {
+                            setState(() => _sortBy = 'dateAdded');
+                          }
+                        },
+                        backgroundColor: AppColors.backgroundMedium,
+                        selectedColor: Colors.green,
+                        labelStyle: TextStyle(
+                          color: _sortBy == 'dateAdded' ? AppColors.textPrimary : AppColors.textMuted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        side: BorderSide(
+                          color: _sortBy == 'dateAdded' ? Colors.green : AppColors.backgroundLight,
+                          width: 1.5,
+                        ),
+                      ),
+                      const SizedBox(width: 8.0),
+                      FilterChip(
+                        label: const Text('A-Z'),
+                        selected: _sortBy == 'titleAZ',
+                        onSelected: (selected) {
+                          if (selected) {
+                            setState(() => _sortBy = 'titleAZ');
+                          }
+                        },
+                        backgroundColor: AppColors.backgroundMedium,
+                        selectedColor: Colors.green,
+                        labelStyle: TextStyle(
+                          color: _sortBy == 'titleAZ' ? AppColors.textPrimary : AppColors.textMuted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        side: BorderSide(
+                          color: _sortBy == 'titleAZ' ? Colors.green : AppColors.backgroundLight,
+                          width: 1.5,
+                        ),
+                      ),
+                      const SizedBox(width: 8.0),
+                      FilterChip(
+                        label: const Text('Z-A'),
+                        selected: _sortBy == 'titleZA',
+                        onSelected: (selected) {
+                          if (selected) {
+                            setState(() => _sortBy = 'titleZA');
+                          }
+                        },
+                        backgroundColor: AppColors.backgroundMedium,
+                        selectedColor: Colors.green,
+                        labelStyle: TextStyle(
+                          color: _sortBy == 'titleZA' ? AppColors.textPrimary : AppColors.textMuted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        side: BorderSide(
+                          color: _sortBy == 'titleZA' ? Colors.green : AppColors.backgroundLight,
+                          width: 1.5,
+                        ),
+                      ),
+                      const SizedBox(width: 8.0),
+                      FilterChip(
+                        label: const Text('Duration'),
+                        selected: _sortBy == 'duration',
+                        onSelected: (selected) {
+                          if (selected) {
+                            setState(() => _sortBy = 'duration');
+                          }
+                        },
+                        backgroundColor: AppColors.backgroundMedium,
+                        selectedColor: Colors.green,
+                        labelStyle: TextStyle(
+                          color: _sortBy == 'duration' ? AppColors.textPrimary : AppColors.textMuted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        side: BorderSide(
+                          color: _sortBy == 'duration' ? Colors.green : AppColors.backgroundLight,
+                          width: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               SliverToBoxAdapter(
                 child: StreamBuilder<List<Song>>(
                   stream: _getPlaylistSongs(),
@@ -205,12 +345,15 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                       );
                     }
 
+                    // Apply sorting to songs
+                    final sortedSongs = _sortSongs(songs);
+
                     return ListView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      itemCount: songs.length,
+                      itemCount: sortedSongs.length,
                       itemBuilder: (context, index) {
-                        final song = songs[index];
+                        final song = sortedSongs[index];
 
                         return Card(
                           color: AppColors.backgroundMedium,
@@ -231,7 +374,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                               print('\x1B[32m${song.title}\x1B[0m');
                               print('\x1B[32m${song.artist}\x1B[0m');
                               print('\x1B[32m${song.audioUrl}\x1B[0m');
-                              _playPlaylist(songs, index);
+                              _playPlaylist(sortedSongs, index, currentPlaylistName);
                             },
                             child: ListTile(
                               leading: SizedBox(

@@ -77,7 +77,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               Container(
                 margin: EdgeInsets.only(right: 8.0),
                 child: IconButton(
-                  icon: Icon(_isSearching ? Icons.close : Icons.search_rounded, size: 30, color: AppColors.textPrimary),
+                  icon: Icon(_isSearching ? Icons.close : Icons.search_rounded, size: 25, color: AppColors.textPrimary),
                   onPressed: () {
                     setState(() {
                       _isSearching = !_isSearching;
@@ -90,7 +90,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 margin: EdgeInsets.only(right: 8.0),
                 child: IconButton(
                   //USE A CUSTOM ICON FOR THIS
-                  icon: const Icon(Icons.add, size: 35, color: AppColors.textPrimary),
+                  icon: const Icon(Icons.add, size: 28, color: AppColors.textPrimary),
                   // Handle add button press
                   onPressed: () {
                     CreatePlaylistModal.show(context, _createPlaylist);

@@ -8,6 +8,7 @@ import 'package:vespera/components/song_recommendation_item.dart';
 import 'package:vespera/models/playlist.dart';
 import 'package:vespera/models/song.dart';
 import 'package:vespera/providers/user_provider.dart';
+import 'package:vespera/screens/profile_screen.dart';
 import 'package:vespera/screens/playlist_detail_screen.dart';
 import 'package:vespera/services/auth_service.dart';
 import 'package:vespera/services/playlist_service.dart';
@@ -100,6 +101,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               onSelected: (String value) {
                 switch (value) {
+                  case 'profile':
+                    Navigator.of(context, rootNavigator: false).push(
+                      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                    );
+                    break;
                   case 'signOut':
                     _handleSignOut();
                     break;
@@ -107,6 +113,16 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               itemBuilder:
                   (BuildContext context) => [
+                    const PopupMenuItem<String>(
+                      value: 'profile',
+                      child: Row(
+                        children: [
+                          Icon(Icons.person, color: AppColors.textPrimary),
+                          SizedBox(width: 10),
+                          Text('Profile', style: TextStyle(color: AppColors.textPrimary)),
+                        ],
+                      ),
+                    ),
                     const PopupMenuItem<String>(
                       value: 'signOut',
                       child: Row(
