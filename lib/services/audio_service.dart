@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:vespera/models/song.dart';
 import 'package:vespera/services/audio_handler.dart';
+import 'package:vespera/services/audio_cache_service.dart';
 
 class AudioService extends ChangeNotifier {
   static final AudioService _instance = AudioService._internal();
@@ -168,19 +169,43 @@ class AudioService extends ChangeNotifier {
       );
 
       // Use audio handler if available (enables background playback + notifications)
+      final cacheService = AudioCacheService();
+
+      // If cached file exists, play local file. Otherwise stream and prefetch in background.
+      final cached = await cacheService.getFileIfExists(audioUrl);
+
       if (_audioHandler != null) {
         _bindToPlayer(_audioHandler!.player);
-        await _audioHandler!.playFromUrl(
-          audioUrl,
-          title: title ?? 'Unknown',
-          artist: artist ?? 'Unknown',
-          artUri: imageUrl,
-        );
+        if (cached != null) {
+          await _audioHandler!.playFromUrl(
+            cached.path,
+            title: title ?? 'Unknown',
+            artist: artist ?? 'Unknown',
+            artUri: imageUrl,
+            isLocalFile: true,
+          );
+        } else {
+          // Stream and prefetch in background
+          await _audioHandler!.playFromUrl(
+            audioUrl,
+            title: title ?? 'Unknown',
+            artist: artist ?? 'Unknown',
+            artUri: imageUrl,
+            isLocalFile: false,
+          );
+          unawaited(cacheService.prefetch(audioUrl));
+        }
       } else {
         // Fallback to direct player (no background support)
         _bindToPlayer(_audioPlayer);
-        await _audioPlayer.setUrl(audioUrl);
-        await _audioPlayer.play();
+        if (cached != null) {
+          await _audioPlayer.setFilePath(cached.path);
+          await _audioPlayer.play();
+        } else {
+          await _audioPlayer.setUrl(audioUrl);
+          await _audioPlayer.play();
+          unawaited(cacheService.prefetch(audioUrl));
+        }
       }
       
       _isPlaying = true;

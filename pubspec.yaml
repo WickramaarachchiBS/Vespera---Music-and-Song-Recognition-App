@@ -38,6 +38,7 @@ dependencies:
   firebase_auth: ^6.1.1
   google_sign_in: ^6.1.0
   cloud_firestore: ^6.0.3
+  flutter_cache_manager: ^3.3.0
   provider: ^6.1.5+1
   just_audio: ^0.10.5
   audio_service: ^0.18.15

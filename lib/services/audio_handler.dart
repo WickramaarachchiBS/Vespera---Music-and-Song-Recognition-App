@@ -68,6 +68,7 @@ class MyAudioHandler extends BaseAudioHandler {
     required String title,
     required String artist,
     String? artUri,
+    bool isLocalFile = false,
   }) async {
     try {
       // Update the media item shown in the notification
@@ -80,7 +81,11 @@ class MyAudioHandler extends BaseAudioHandler {
       ));
 
       // Load and play the audio
-      await _player.setUrl(url);
+      if (isLocalFile) {
+        await _player.setFilePath(url);
+      } else {
+        await _player.setUrl(url);
+      }
       await _player.play();
     } catch (e) {
       print('Error playing from URL: $e');
