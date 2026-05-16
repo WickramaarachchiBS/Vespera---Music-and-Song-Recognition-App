@@ -1,6 +1,7 @@
 import 'package:audio_service/audio_service.dart' as audio_service;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:vespera/providers/user_provider.dart';
 import 'package:vespera/providers/whisper_provider.dart';
@@ -53,7 +54,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Vespera',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple)),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        textTheme: GoogleFonts.poppinsTextTheme(),
+      ),
       // home: const AuthWrapper(),
       home: const AuthWrapper(),
       routes: {

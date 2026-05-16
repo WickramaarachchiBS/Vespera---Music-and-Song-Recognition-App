@@ -4,6 +4,7 @@ import 'package:vespera/colors.dart';
 import 'package:vespera/components/discovered_songs_list.dart';
 import 'package:vespera/components/identified_song_with_playlist_modal.dart';
 import 'package:vespera/providers/whisper_provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class WhisperScreen extends StatefulWidget {
   const WhisperScreen({super.key});
@@ -134,12 +135,12 @@ class _WhisperScreenState extends State<WhisperScreen> with TickerProviderStateM
 
   Widget _buildTitle() {
     return Text(
-      'Vespera',
-      style: TextStyle(
+      'Whisper Your Song',
+      style: GoogleFonts.poppins(
         color: Colors.white.withOpacity(0.9),
-        fontSize: 32,
+        fontSize: 20,
         fontWeight: FontWeight.w300,
-        letterSpacing: 2,
+        letterSpacing: 0.5,
       ),
     );
   }

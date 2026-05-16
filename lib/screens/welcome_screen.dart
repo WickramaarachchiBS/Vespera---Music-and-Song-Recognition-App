@@ -31,7 +31,8 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Millions of songs.\nFree on Vesper.',
+                  // 'Millions of songs.\nFind and Stream on Vesper.',
+                  'Vesper \nFind Your Next Favorite Sound.',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
                 ),
