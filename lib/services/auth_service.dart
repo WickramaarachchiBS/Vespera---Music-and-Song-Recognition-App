@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -83,7 +84,56 @@ class AuthService {
 
   // Sign out
   Future<void> signOut() async {
+    try {
+      await GoogleSignIn().signOut();
+    } catch (e) {
+      // ignore: avoid_print
+      print('GoogleSignIn signOut error: $e');
+    }
     await _auth.signOut();
+  }
+
+  // SIGN IN WITH GOOGLE -------------------------------------------------------------------------
+  Future<UserCredential?> signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return null; // user cancelled
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+
+      // If new user, create Firestore document
+      final user = userCredential.user;
+      if (user != null) {
+        final docRef = _firestore.collection('users').doc(user.uid);
+        final doc = await docRef.get();
+        if (!doc.exists) {
+          await docRef.set({
+            'uid': user.uid,
+            'name': user.displayName ?? '',
+            'email': user.email ?? '',
+            'createdAt': FieldValue.serverTimestamp(),
+            'profilePicture': user.photoURL ?? '',
+          });
+        }
+      }
+
+      return userCredential;
+    } on FirebaseAuthException catch (e) {
+      // ignore: avoid_print
+      print('FirebaseAuth Google signIn failed: code=${e.code} message=${e.message}');
+      throw 'Google sign-in failed (${e.code}): ${e.message ?? 'Unknown error'}';
+    } catch (e) {
+      // ignore: avoid_print
+      print('Google signIn error: $e');
+      throw 'An unexpected error occurred during Google sign-in: $e';
+    }
   }
 
   // EXTRA FOR LATER USE ----------------------------------------------------------------

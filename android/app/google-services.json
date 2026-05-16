@@ -12,7 +12,20 @@
           "package_name": "com.example.vespera"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "905106383269-k8fdlg1a3nqut6u157a5pt5e6avqfkmn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.vespera",
+            "certificate_hash": "3efd3a473500e934c23517578a2f187eeba2b826"
+          }
+        },
+        {
+          "client_id": "905106383269-g6tab8ir5stg68rda00eb8tfu77196p7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA7qNj8-z5osmBmRLNncP2Os0bMZiBE53k"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "905106383269-g6tab8ir5stg68rda00eb8tfu77196p7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

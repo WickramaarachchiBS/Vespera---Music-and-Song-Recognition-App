@@ -71,6 +71,35 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
+  // HANDLE GOOGLE SIGN UP
+  Future<void> _onGoogleSignUpPressed() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userCredential = await _authService.signInWithGoogle();
+      if (userCredential == null) {
+        if (mounted) AppNotification.showError(context, 'Google sign-in cancelled.');
+        return;
+      }
+
+      if (mounted) {
+        await Provider.of<UserProvider>(context, listen: false).loadUserData();
+        AppNotification.showSuccess(context, 'Successfully signed in with Google!');
+        Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
+      }
+    } catch (e) {
+      if (mounted) AppNotification.showError(context, 'Google sign-in failed. Please try again.');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -236,9 +265,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 //SIGN UP WITH GOOGLE BUTTON
                 SizedBox(height: 15),
                 OutlinedButton.icon(
-                  onPressed: () {
-                    // Google sign up
-                  },
+                  onPressed: _isLoading ? null : _onGoogleSignUpPressed,
                   icon: Image.asset('assets/google_logo.png', height: 24, width: 24),
                   label: Text('Continue with Google'),
                   style: OutlinedButton.styleFrom(
