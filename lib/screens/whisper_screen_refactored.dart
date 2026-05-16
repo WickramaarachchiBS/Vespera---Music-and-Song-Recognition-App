@@ -135,7 +135,7 @@ class _WhisperScreenState extends State<WhisperScreen> with TickerProviderStateM
 
   Widget _buildTitle() {
     return Text(
-      'Whisper Your Song',
+      'Discover what\'s playing',
       style: GoogleFonts.poppins(
         color: Colors.white.withOpacity(0.9),
         fontSize: 20,

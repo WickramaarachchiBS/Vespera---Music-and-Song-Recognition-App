@@ -20,8 +20,9 @@ class UserProvider extends ChangeNotifier {
     User? user = _authService.currentUser;
     if (user == null) return;
 
+    if (_isLoading) return;
+
     _isLoading = true;
-    notifyListeners();
 
     try {
       Map<String, dynamic>? userData = await _authService.getUserData(user.uid);
@@ -29,7 +30,6 @@ class UserProvider extends ChangeNotifier {
         _username = userData['name'] ?? 'User';
         _profilePicture = userData['profilePicture'] ?? '';
         _email = userData['email'] ?? '';
-        notifyListeners();
         print('User data loaded: $_username');
         print ('Email: $_email');
       }

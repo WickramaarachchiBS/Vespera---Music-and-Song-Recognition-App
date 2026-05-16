@@ -91,15 +91,16 @@ class ProfileEditDialog {
                             FocusManager.instance.primaryFocus?.unfocus();
                             Navigator.of(dialogContext).pop();
 
-                            // Load user data after dialog closes to avoid state changes during build
-                            if (context.mounted) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) async {
+                              if (!context.mounted) return;
+
                               await userProvider.loadUserData();
-                            }
-                            
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Profile updated successfully.')),
-                            );
+
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Profile updated successfully.')),
+                              );
+                            });
                           } catch (e) {
                             if (!context.mounted) {
                               return;

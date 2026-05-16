@@ -170,7 +170,14 @@ class AuthService {
       }
 
       if (updates.isNotEmpty) {
-        await _firestore.collection('users').doc(uid).update(updates);
+        updates['updatedAt'] = FieldValue.serverTimestamp();
+      }
+
+      if (updates.isNotEmpty) {
+        await _firestore.collection('users').doc(uid).set(
+              updates,
+              SetOptions(merge: true),
+            );
       }
     } catch (e) {
       print('Error updating user profile: $e');
