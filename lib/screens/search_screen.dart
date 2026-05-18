@@ -125,8 +125,10 @@ class _SearchScreenState extends State<SearchScreen> {
             child: IconButton(
               icon: const Icon(Icons.add, size: 30, color: AppColors.textPrimary),
               onPressed: () {
-                AddSongsData.displayALlSongsWithNameAndLink(context);
+                AddSongsData.addSampleSongs(context);
                 print('Add button pressed. Adding songs to database');
+                AddSongsData.displayALlSongsWithNameAndLink(context);
+                print('All Songs in database');
               },
             ),
           ),

@@ -107,23 +107,23 @@ class _MiniMusicPlayerState extends State<MiniMusicPlayer> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    _audioService.currentSongTitle ??
+                                  MarqueeText(
+                                    text: _audioService.currentSongTitle ??
                                         'Unknown Song',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: 2),
-                                  Text(
-                                    _audioService.currentArtist ??
+                                  MarqueeText(
+                                    text: _audioService.currentArtist ??
                                         'Unknown Artist',
                                     style: const TextStyle(
-                                        color: Colors.grey, fontSize: 12),
+                                      color: Colors.grey,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -160,6 +160,125 @@ class _MiniMusicPlayerState extends State<MiniMusicPlayer> {
             ],
           ),
         ),
+    );
+  }
+}
+
+class MarqueeText extends StatefulWidget {
+  final String text;
+  final TextStyle style;
+  final double velocity;
+
+  const MarqueeText({
+    required this.text,
+    required this.style,
+    this.velocity = 28,
+    super.key,
+  });
+
+  @override
+  State<MarqueeText> createState() => _MarqueeTextState();
+}
+
+class _MarqueeTextState extends State<MarqueeText>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  double _availableWidth = 0;
+  double _textWidth = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this);
+  }
+
+  @override
+  void didUpdateWidget(covariant MarqueeText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.text != widget.text || oldWidget.style != widget.style) {
+      _measureText();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _measureText() {
+    if (_availableWidth <= 0) return;
+
+    final painter = TextPainter(
+      text: TextSpan(text: widget.text, style: widget.style),
+      maxLines: 1,
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    final newWidth = painter.width;
+    if (newWidth == _textWidth) return;
+
+    setState(() {
+      _textWidth = newWidth;
+    });
+
+    if (_textWidth > _availableWidth) {
+      final scrollDistance = _textWidth - _availableWidth;
+      final duration = Duration(
+        milliseconds: ((scrollDistance / widget.velocity) * 1000).round(),
+      );
+      _controller
+        ..duration = duration
+        ..repeat();
+    } else {
+      _controller.stop();
+      _controller.value = 0;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        if (width.isFinite && width != _availableWidth) {
+          _availableWidth = width;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _measureText();
+            }
+          });
+        }
+
+        if (_textWidth <= _availableWidth || _availableWidth <= 0) {
+          return Text(
+            widget.text,
+            style: widget.style,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          );
+        }
+
+        final scrollDistance = _textWidth - _availableWidth;
+
+        return ClipRect(
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return Transform.translate(
+                offset: Offset(-scrollDistance * _controller.value, 0),
+                child: child,
+              );
+            },
+            child: Text(
+              widget.text,
+              style: widget.style,
+              maxLines: 1,
+              softWrap: false,
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -10,73 +10,73 @@ class AddSongsData {
 
     final sampleSongs = <Map<String, dynamic>>[
       {
-        'album': 'Deadbeat',
-        'title': 'Dracula',
-        'titleLowercase': 'dracula',
-        'artist': 'Tame Impala',
-        'artistLowercase': 'tame impala',
+        'album': 'Gini Malak',
+        'title': 'Malata Suwanda Se',
+        'titleLowercase': 'malata suwanda se',
+        'artist': 'Sunil Edirisinghe',
+        'artistLowercase': 'sunil edirisinghe',
         'audioUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Tame%20Impala%20-%20Dracula.mp3?updatedAt=1775548248976',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Sunil%20Edirisinghe%20-%20Malata%20Suwanda%20Se.mp3?updatedAt=1779018497232',
         'imageUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Dracula.jpg',
-        'duration': 205,
-        'genre': 'Indie',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Malata%20Suwada%20Se.jpg',
+        'duration': 213,
+        'genre': 'Sri Lankan/Traditional',
         'createdAt': FieldValue.serverTimestamp(),
       },
       {
-        'album': 'Currents',
-        'title': 'The Less I Know The Better',
-        'titleLowercase': 'the less i know the better',
-        'artist': 'Tame Impala',
-        'artistLowercase': 'tame impala',
+        'album': 'Pineapple Sunrise',
+        'title': 'Sex, Drugs, Etc.',
+        'titleLowercase': 'sex, drugs, etc.',
+        'artist': 'Beach Weather',
+        'artistLowercase': 'beach weather',
         'audioUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Tame%20Impala%20-%20The%20Less%20I%20Know%20The%20Better.mp3?updatedAt=1775548249741',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Beach%20Weather%20-%20Sex,%20Drugs,%20Etc.mp3?updatedAt=1779018497323',
         'imageUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/The%20less%20i%20know%20the%20better.jpg',
-        'duration': 217,
-        'genre': 'Funk/Indie/Pop/Disco',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Sex,%20Drugs,%20Etc.jpg',
+        'duration': 209,
+        'genre': 'Alternative/Indie',
         'createdAt': FieldValue.serverTimestamp(),
       },
       {
-        'album': 'Her',
-        'title': 'Her',
-        'titleLowercase': 'her',
-        'artist': 'American Dawn',
-        'artistLowercase': 'american dawn',
+        'album': 'Sweet Boy',
+        'title': 'Mr. Incorrect',
+        'titleLowercase': 'mr. incorrect',
+        'artist': 'Malcolm Todd',
+        'artistLowercase': 'malcolm todd',
         'audioUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/The%20American%20Dawn%20-%20Her.mp3?updatedAt=1775548251542',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Malcolm%20Todd%20-%20Mr%20Incorrect.mp3?updatedAt=1779018497121',
         'imageUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Her.jpg',
-        'duration': 214,
-        'genre': 'Rock/Indie',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Mr.%20Incorrect.jpg',
+        'duration': 171,
+        'genre': 'Alternative/Indie',
         'createdAt': FieldValue.serverTimestamp(),
       },
       {
-        'album': 'Dawn FM',
-        'title': 'Is There Someone Else?',
-        'titleLowercase': 'is there someone else?',
-        'artist': 'The Weeknd',
-        'artistLowercase': 'the weeknd',
+        'album': 'Shoba',
+        'title': 'Shoba',
+        'titleLowercase': 'shoba',
+        'artist': 'Bashi Devanga',
+        'artistLowercase': 'bashi devanga',
         'audioUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/The%20Weeknd%20-%20Is%20There%20Someone%20Else.mp3?updatedAt=1775548251292',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Bhashi%20Devanga%20-%20Shoba.mp3?updatedAt=1779019610873',
         'imageUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Is%20there%20someone%20else.jpg',
-        'duration': 199,
-        'genre': 'R&B/Soul',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Shoba.jpg',
+        'duration': 156,
+        'genre': 'Sri Lankan/Traditional',
         'createdAt': FieldValue.serverTimestamp(),
       },
       {
-        'album': 'Starboy',
-        'title': 'Starboy',
-        'titleLowercase': 'starboy',
-        'artist': 'The Weeknd, Daft Punk',
-        'artistLowercase': 'the weeknd, daft punk',
+        'album': 'Majboor',
+        'title': 'Majboor',
+        'titleLowercase': 'majboor',
+        'artist': 'Sheheryar Rehan, Zoha Waseem',
+        'artistLowercase': 'sheheryar rehan, zoha waseem',
         'audioUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/The%20Weeknd,%20Daft%20Punk%20-%20Starboy.mp3?updatedAt=1775548251219',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/Music/Sheheryar%20Rehan,%20Zoha%20Waseem%20-%20Majboor.mp3?updatedAt=1779018497052',
         'imageUrl':
-            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Starboy.jpg',
-        'duration': 230,
-        'genre': 'R&B/Pop',
+            'https://ik.imagekit.io/k0z60e3cq/Vesper/MusicCovers/Majiboor.jpg',
+        'duration': 159,
+        'genre': 'Indian Pop',
         'createdAt': FieldValue.serverTimestamp(),
       },
     ];
@@ -132,7 +132,7 @@ class AddSongsData {
 
       debugPrint('🎶 All Songs in Database:');
       for (final song in songs) {
-        debugPrint('Title: ${song['title']}, Artist: ${song['artist']}, URL: ${song['audioUrl']}');
+        debugPrint('Title: ${song['title']}, Artist: ${song['artist']}');
       }
 
       if (context.mounted) {
