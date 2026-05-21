@@ -113,17 +113,22 @@ class _WhisperScreenState extends State<WhisperScreen> with TickerProviderStateM
         child: Stack(
           children: [
             SafeArea(
-              child: Column(
-                children: [
-                  const SizedBox(height: 60),
-                  _buildTitle(),
-                  const Spacer(),
-                  _buildCenterButton(),
-                  const SizedBox(height: 30),
-                  _buildStatusText(),
-                  const Spacer(),
-                  const SizedBox(height: 100),
-                ],
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 720),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 60),
+                      _buildTitle(),
+                      const Spacer(),
+                      _buildCenterButton(),
+                      const SizedBox(height: 30),
+                      _buildStatusText(),
+                      const Spacer(),
+                      const SizedBox(height: 100),
+                    ],
+                  ),
+                ),
               ),
             ),
             _buildDraggableSheet(),
@@ -318,41 +323,46 @@ class _WhisperScreenState extends State<WhisperScreen> with TickerProviderStateM
       snap: true,
       snapSizes: const [0.15, 0.5, 0.95],
       builder: (BuildContext context, ScrollController scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF1E1E2E).withOpacity(0.95),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, -2))],
-          ),
-          child: CustomScrollView(
-            controller: scrollController,
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              SliverToBoxAdapter(child: _buildDragHandle()),
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                sliver: SliverToBoxAdapter(
-                  child: Consumer<WhisperProvider>(
-                    builder: (context, provider, child) {
-                      return Column(
-                        children: [
-                          _buildHeader(provider.discoveredSongs.length),
-                          const SizedBox(height: 20),
-                          DiscoveredSongsList(
-                            songs: provider.discoveredSongs,
-                            onShowSnackBar: (message) => _showSnackBar(message, duration: 2),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E2E).withOpacity(0.95),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, -2))],
               ),
-            ],
+              child: CustomScrollView(
+                controller: scrollController,
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  SliverToBoxAdapter(child: _buildDragHandle()),
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    sliver: SliverToBoxAdapter(
+                      child: Consumer<WhisperProvider>(
+                        builder: (context, provider, child) {
+                          return Column(
+                            children: [
+                              _buildHeader(provider.discoveredSongs.length),
+                              const SizedBox(height: 20),
+                              DiscoveredSongsList(
+                                songs: provider.discoveredSongs,
+                                onShowSnackBar: (message) => _showSnackBar(message, duration: 2),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        );
-      },
+        );      },
     );
+  
   }
 
   Widget _buildDragHandle() {
